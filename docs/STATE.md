@@ -1,6 +1,6 @@
 # Current state
 
-**Last updated:** 2026-08-30
+**Last updated:** 2026-08-31
 **Phase:** first draft built, awaiting owner feedback and real content.
 
 This file is the handoff point between sessions. Update it in the same commit as
@@ -13,6 +13,7 @@ is a bug.
 
 `npm run verify` (typecheck + lint + build + export validation) exits 0.
 Export: **53 files, 2 MB**.
+Clean-state verified (with `.next/` and `next-env.d.ts` deleted before running).
 
 | Area | Status |
 |---|---|
