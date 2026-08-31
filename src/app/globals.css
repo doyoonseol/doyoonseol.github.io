@@ -1,0 +1,262 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* next-themes toggles the `dark` class on <html>. */
+@custom-variant dark (&:is(.dark *));
+
+/* ===========================================================================
+ * PALETTE
+ *
+ * Art direction: museum minimal (Gallery White) as the structure, a Darkroom
+ * dark mode so photographs are the only light source, and a warm Soft Light
+ * palette throughout so neither mode feels clinical.
+ *
+ * Every value is oklch. Two reasons: perceptually uniform lightness, so a
+ * "55% lightness" grey reads as the same weight at any hue; and hue is a single
+ * number, so warming the entire palette is one find-and-replace rather than
+ * re-picking twenty hex codes.
+ *
+ * Hues sit between 55 and 90 (warm, toward paper and clay). Chroma is kept
+ * under 0.01 for anything structural. Nothing in the interface should compete
+ * with a photograph for saturation.
+ *
+ * Token names follow shadcn/ui so components added via its CLI inherit these
+ * without modification.
+ * ======================================================================== */
+
+:root {
+  /* Warm paper rather than white. Pure #fff next to a photograph reads as a
+   * blown highlight and makes prints look muddy by comparison. */
+  --background: oklch(98.6% 0.005 85);
+  --foreground: oklch(23% 0.008 60);
+
+  --card: oklch(97.2% 0.006 85);
+  --card-foreground: oklch(23% 0.008 60);
+  --popover: oklch(99% 0.004 85);
+  --popover-foreground: oklch(23% 0.008 60);
+
+  --primary: oklch(23% 0.008 60);
+  --primary-foreground: oklch(98.6% 0.005 85);
+  --secondary: oklch(95% 0.007 85);
+  --secondary-foreground: oklch(30% 0.008 60);
+
+  --muted: oklch(95.5% 0.006 85);
+  /* 4.6:1 on --background. Metadata must stay legible, not just decorative. */
+  --muted-foreground: oklch(52% 0.009 65);
+
+  /* Muted clay. The only chromatic note in the interface, used sparingly. */
+  --accent: oklch(60% 0.055 55);
+  --accent-foreground: oklch(98.6% 0.005 85);
+
+  --destructive: oklch(52% 0.17 27);
+
+  --border: oklch(91% 0.006 80);
+  --input: oklch(91% 0.006 80);
+  --ring: oklch(60% 0.055 55);
+
+  /* Hairline rules, wall-label thin. Lighter than --border. */
+  --hairline: oklch(93.5% 0.005 82);
+
+  /* Translucent surface for panels floating over photographs. */
+  --glass: oklch(99% 0.004 85 / 0.72);
+  --glass-border: oklch(23% 0.008 60 / 0.08);
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Warm near-black. Deep enough that photographs appear self-illuminated,
+   * warm enough to avoid the blue cast of a neutral dark theme. */
+  --background: oklch(13.5% 0.004 60);
+  --foreground: oklch(92% 0.006 85);
+
+  --card: oklch(17% 0.005 65);
+  --card-foreground: oklch(92% 0.006 85);
+  --popover: oklch(17% 0.005 65);
+  --popover-foreground: oklch(92% 0.006 85);
+
+  --primary: oklch(92% 0.006 85);
+  --primary-foreground: oklch(13.5% 0.004 60);
+  --secondary: oklch(21% 0.005 65);
+  --secondary-foreground: oklch(92% 0.006 85);
+
+  --muted: oklch(21% 0.005 65);
+  /* 5.9:1 on the dark --background. */
+  --muted-foreground: oklch(66% 0.008 70);
+
+  /* Lifted slightly in dark mode; the same clay reads muddy against black. */
+  --accent: oklch(73% 0.06 65);
+  --accent-foreground: oklch(13.5% 0.004 60);
+
+  --destructive: oklch(62% 0.19 25);
+
+  --border: oklch(26% 0.006 70);
+  --input: oklch(26% 0.006 70);
+  --ring: oklch(73% 0.06 65);
+
+  --hairline: oklch(23% 0.006 70);
+
+  --glass: oklch(15% 0.005 62 / 0.68);
+  --glass-border: oklch(92% 0.006 85 / 0.1);
+}
+
+/* ===========================================================================
+ * THEME BRIDGE
+ * Exposes the tokens above as Tailwind utilities (bg-background, text-muted-
+ * foreground, border-hairline, font-serif, and so on).
+ * ======================================================================== */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-hairline: var(--hairline);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+
+  /* EB Garamond carries the whole site. Injected by next/font in layout.tsx. */
+  --font-serif: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
+  --font-sans: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  /* Slow, confident easing. Nothing here snaps. */
+  --ease-gallery: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ===========================================================================
+ * BASE
+ * ======================================================================== */
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+
+    /* Nothing on this page scrolls. Sections are stacked and pinned to the
+     * viewport, and DeckProvider fades between them, because exactly one
+     * photograph must be visible at any moment — and any scrolled transition,
+     * however brief, puts two on screen at once.
+     * See docs/decisions/0008-no-scroll-stage.md
+     *
+     * Stated here as well as on the stage so that overscroll rubber-banding
+     * cannot reveal the page edges on iOS. */
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-serif);
+
+    /* EB Garamond has a small x-height for its point size, so it needs more
+     * room than a grotesque to read comfortably. */
+    font-size: 1.0625rem;
+    line-height: 1.65;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-variant-numeric: oldstyle-nums;
+  }
+
+  /* Metadata and any figure that should align in a column. Garamond defaults
+   * to oldstyle figures, which look lovely in prose and ragged in a table. */
+  .tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 400; /* Garamond sets its authority through size, not weight. */
+    line-height: 1.15;
+    letter-spacing: -0.011em;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Accessibility floor, set once and globally so no individual component can
+   * opt out of it by accident. DeckProvider additionally reduces its transitions
+   * to instant swaps and skips the lens sequence — it still handles navigation,
+   * because navigation is the only way through the site. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* The no-JavaScript fallback is a <noscript> style block in layout.tsx, not a
+   * class here — a `.no-js` class would have to be removed by the very JavaScript
+   * whose absence it is describing. */
+}
+
+/* ===========================================================================
+ * UTILITIES
+ * ======================================================================== */
+
+@layer utilities {
+  /* Wall-label caption: small, wide-tracked, uppercase. Used for EXIF keys
+   * and section markers. */
+  .label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  /* Panel floating over a photograph. */
+  .glass {
+    background-color: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+  }
+
+  /* Establishes the shared 3D space for the camera. Children position
+   * themselves on the Z axis to produce real parallax on tilt. */
+  .scene-3d {
+    perspective: 1100px;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+  }
+}
