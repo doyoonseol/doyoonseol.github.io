@@ -288,7 +288,7 @@ async function main() {
     const camera = clean(m.camera);
     const focalLength = clean(m.focalLength ?? m.focal);
     const aperture = clean(m.aperture ?? m.fNumber ?? m["F number"]);
-    const shutter = clean(m.shutter ?? m.shutterSpeed ?? m["shutter speed"]);
+    const shutter = clean(m.shutter ?? m.shutterSpeed ?? m["shutter speed"] ?? m.exposure);
     const iso = m.iso !== undefined && m.iso !== "" ? clean(m.iso) : undefined;
 
     const shot = {};
