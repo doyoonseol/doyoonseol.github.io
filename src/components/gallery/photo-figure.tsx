@@ -64,8 +64,16 @@ export function PhotoFigure({
         {/* Ambient background glow using the image's own colors */}
         {photo.image.lqip && (
           <div
-            className="absolute inset-0 -z-10 scale-105 opacity-40 blur-3xl saturate-150 transition-opacity duration-1000 dark:opacity-30"
-            style={lqipStyle(photo.image.lqip)}
+            className="absolute -inset-16 -z-10 opacity-50 blur-xl saturate-150 transition-opacity duration-1000 dark:opacity-40"
+            style={{
+              ...lqipStyle(photo.image.lqip),
+              WebkitMaskImage:
+                "linear-gradient(to top, transparent, black 4rem, black calc(100% - 4rem), transparent), linear-gradient(to left, transparent, black 4rem, black calc(100% - 4rem), transparent)",
+              WebkitMaskComposite: "source-in",
+              maskImage:
+                "linear-gradient(to top, transparent, black 4rem, black calc(100% - 4rem), transparent), linear-gradient(to left, transparent, black 4rem, black calc(100% - 4rem), transparent)",
+              maskComposite: "intersect",
+            }}
             aria-hidden="true"
           />
         )}
