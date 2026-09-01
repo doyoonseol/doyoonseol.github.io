@@ -1,7 +1,11 @@
 # Current state
 
-**Last updated:** 2026-08-31
+**Last updated:** 2026-09-01
 **Phase:** first draft built, awaiting owner feedback and real content.
+
+### Recent Updates
+- Resolved an opacity subscription race condition in `DeckSection` that prevented subsequent gallery images from displaying.
+- Added support for the `exposure` alias in `.json` metadata sidecars as an alternative to `shutter`.
 
 This file is the handoff point between sessions. Update it in the same commit as
 the work it describes. If it disagrees with the code, the code wins and this file

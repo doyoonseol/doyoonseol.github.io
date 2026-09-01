@@ -37,7 +37,7 @@ Metadata is **not read from the image files themselves**. Include a matching `.j
 | Camera | `camera` |
 | Focal Length | `focalLength` (or `focal`) |
 | F Number (Aperture) | `aperture` |
-| Shutter Speed | `shutter` |
+| Shutter Speed | `shutter` (or `exposure`) |
 | ISO | `iso` |
 | Location | `location` |
 

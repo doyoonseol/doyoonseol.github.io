@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useTransform } from "motion/react";
+import { useEffect } from "react";
+import { motion, useMotionValue } from "motion/react";
 import type { ReactNode } from "react";
 
 import { useDeck } from "@/components/deck/deck-provider";
@@ -37,23 +38,23 @@ export function DeckSection({
   index,
   id,
   label,
-  children,
   className,
+  children,
 }: {
   index: number;
   id: string;
   label: string;
-  children: ReactNode;
   className?: string;
+  children: ReactNode;
 }) {
   const { index: active, fade } = useDeck();
-
   const isActive = index === active;
-  const distance = Math.abs(index - active);
 
   // The first photograph is kept mounted whenever the intro is on stage: the lens
   // overlay renders it, and unmounting it here would drop it from cache.
   const pinned = index === FIRST_PHOTO_SECTION && active === 0;
+
+  const distance = Math.abs(index - active);
 
   if (distance > WINDOW && !pinned) return null;
 
