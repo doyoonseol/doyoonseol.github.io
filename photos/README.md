@@ -22,24 +22,21 @@ Progress is on the repository's **Actions** tab.
 The number is stripped from the title, so `01-harbour.jpg` becomes **Harbour**.
 Without numbers, files are ordered alphabetically.
 
-## Titles, captions, camera details
+## Metadata via .json sidecar files
 
-All picked up automatically.
+Metadata is **not read from the photo files themselves**. Instead, include a `.json` text file alongside each photo image with the exact same name (e.g. `01-harbour.json` for `01-harbour.jpg`).
 
-Camera, lens, focal length, aperture, shutter and ISO come from the file's EXIF —
-your camera already wrote them. Title and caption come from the file's IPTC fields,
-which is what Lightroom's **Title** and **Caption** boxes write. Fill those in when
-exporting and there is nothing else to do.
+The supported metadata fields shown on the website are:
+- `camera`
+- `focalLength` (or `focal`)
+- `aperture` (F number, e.g. `"2.8"`)
+- `shutter` (shutter speed, e.g. `"1/250"`)
+- `iso`
+- `location`
 
-Missing details are simply left out. A scanned negative showing only a camera name
-is fine; so is a photograph with no details at all.
+You can also include `title`, `caption`, and `alt` text in the JSON file.
 
-## Overriding anything
-
-If a field is wrong or absent, add a small text file next to the image with the same
-name and a `.json` extension. Only include what you want to change.
-
-`01-harbour.json`
+### Example: `01-harbour.json`
 
 ```json
 {
@@ -47,10 +44,17 @@ name and a `.json` extension. Only include what you want to change.
   "caption": "Fishing boats under flat grey light.",
   "alt": "Fishing boats moored against a concrete quay under an overcast sky.",
   "location": "Iceland",
-  "date": "March 2026",
-  "metadata": { "camera": "Pentax 67", "lens": "SMC 105mm f/2.4" }
+  "metadata": {
+    "camera": "Fujifilm X-T5",
+    "focalLength": "35",
+    "aperture": "2.8",
+    "shutter": "1/500",
+    "iso": 320
+  }
 }
 ```
+
+If not all listed metadata fields are provided in the `.json` file, they are assumed not present and will not be displayed on the website.
 
 ## Showing the RAW alongside the edit
 

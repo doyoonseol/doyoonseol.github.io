@@ -108,15 +108,6 @@ export function PhotoFigure({
               <span>{photo.location}</span>
             </>
           )}
-
-          {photo.date && (
-            <>
-              <span aria-hidden="true" className="text-muted-foreground/30">
-                ·
-              </span>
-              <span className="tabular">{photo.date}</span>
-            </>
-          )}
         </div>
 
         <PhotoMeta photo={photo} />

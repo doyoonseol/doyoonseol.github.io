@@ -47,21 +47,11 @@ Renditions are cached with `actions/cache`, keyed on a hash of `photos/` with a
 `restore-keys` prefix fallback. Adding one photograph re-encodes that one photograph
 rather than the whole archive.
 
-### Metadata comes from the files themselves
+### Metadata comes exclusively from .json sidecars
 
-This is what makes the no-code claim hold up. A gallery still needs titles, captions
-and camera details, and asking for them in a form would just be a different editor.
+Metadata is read exclusively from sidecar `.json` text files provided alongside each image (e.g. `01-harbour.json` for `01-harbour.jpg`).
 
-But photographers already produce this data. EXIF carries camera, lens, focal length,
-aperture, shutter, ISO and capture date. **IPTC carries title and caption, and is
-exactly what Lightroom's Title and Caption boxes write.** So `exifr` is asked for IPTC
-and XMP as well as EXIF — neither is read by default — and the fields filled in during
-editing arrive with the file.
-
-Resolution order per field: sidecar `.json` → embedded IPTC/XMP → EXIF → filename.
-
-A `.json` sidecar is the escape hatch for anything wrong or missing. It is data, not
-code: a few quoted keys, and only the fields being changed.
+Supported metadata fields are `camera`, `focalLength`, `aperture`, `shutter`, `iso`, and `location` (along with `title`, `caption`, and `alt`). Metadata is not extracted from the photo image files themselves. If a field is omitted from the JSON file, it is assumed not present and omitted from the site.
 
 ### WebP, not AVIF
 

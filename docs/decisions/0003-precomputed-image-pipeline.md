@@ -30,17 +30,16 @@ roughly 100 photographs.
 
 ## Decision
 
-Precompute everything with `sharp` and `exifr` in `scripts/photos-build.ts`, run
-locally on demand rather than in CI.
+Precompute everything with `sharp` in `scripts/photos-build.mjs`, run
+at build time / CI.
 
 ```
-_originals/                     full-resolution files, gitignored, never published
+photos/                         image source files + sidecar .json files in version control
         |
-        |  npm run photos:build
+        |  npm run photos
         v
-public/img/<hash>.avif          committed derivatives, 5 widths
-public/img/<hash>.jpg           one mid-size fallback
-src/data/photos.generated.json  dimensions, EXIF, LQIP, dominant colour
+public/img/<hash>-<w>.webp      generated WebP renditions, 5 widths
+src/data/photos.generated.json  dimensions, metadata, LQIP
 ```
 
 For each original: AVIF at 480 / 960 / 1440 / 1920 / 2560px, one JPEG at 1200px as

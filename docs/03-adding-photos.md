@@ -28,28 +28,22 @@ A number in front sets the running order, and is stripped from the title:
 Without numbers, files are ordered alphabetically. To reorder later, rename the
 files — no other change.
 
-## Titles, captions and camera details
+## Titles, captions and metadata (.json sidecars)
 
-Picked up automatically, from the files themselves:
+Metadata is **not read from the image files themselves**. Include a matching `.json` text file beside each image file (e.g., `01-harbour.json` for `01-harbour.jpg`).
 
-| Shown on the site | Comes from |
+| Shown on the site | JSON Field |
 |---|---|
-| Camera, lens, focal length, aperture, shutter, ISO | EXIF, written by your camera |
-| Date | EXIF capture date, shown as "March 2026" |
-| Title | IPTC Title — Lightroom's **Title** box |
-| Caption, and alt text | IPTC Caption — Lightroom's **Caption** box |
-| Location | IPTC City and Country |
+| Camera | `camera` |
+| Focal Length | `focalLength` (or `focal`) |
+| F Number (Aperture) | `aperture` |
+| Shutter Speed | `shutter` |
+| ISO | `iso` |
+| Location | `location` |
 
-So filling in Title and Caption on export is all that is needed. Anything absent is
-simply left out: a scanned negative showing only a camera name is fine, and so is a
-photograph with no details at all.
+Title, caption, and alt text can also be specified in the JSON file.
 
-## Correcting anything
-
-If a field is wrong or missing, add a small text file beside the image with the same
-name and a `.json` extension. Include only what you want to change.
-
-`01-harbour.json`
+### `01-harbour.json`
 
 ```json
 {
@@ -57,13 +51,17 @@ name and a `.json` extension. Include only what you want to change.
   "caption": "Fishing boats under flat grey light.",
   "alt": "Fishing boats moored against a concrete quay under an overcast sky.",
   "location": "Iceland",
-  "date": "March 2026",
-  "metadata": { "camera": "Pentax 67", "lens": "SMC 105mm f/2.4" }
+  "metadata": {
+    "camera": "Pentax 67",
+    "focalLength": "105",
+    "aperture": "2.4",
+    "shutter": "1/125",
+    "iso": 400
+  }
 }
 ```
 
-These always win over what is embedded in the file. Values are formatted for you —
-`"2.8"` displays as `f/2.8`, `"1/250"` as `1/250s`, `400` as `ISO 400`.
+Values are formatted automatically — `"2.8"` displays as `f/2.8`, `"1/250"` as `1/250s`, `400` as `ISO 400`. If any of the listed metadata fields are omitted from the `.json` file, they are assumed not present and omitted from the site display.
 
 ## Showing the RAW next to the edit
 

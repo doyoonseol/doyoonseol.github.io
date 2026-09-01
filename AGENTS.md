@@ -69,8 +69,7 @@ and `src/lib/photos.ts`. When content is missing, add a clearly-marked placehold
 in the correct position rather than deleting the element — the owner reviews
 placement before supplying the real thing.
 
-**Every shot-metadata field is optional.** Partial EXIF is normal, not an edge
-case. `alt` is the one required field and must stay required.
+**Metadata comes exclusively from sidecar `.json` files** (camera, focal length, aperture, shutter speed, ISO, location). Every metadata field is optional and omitted if not provided in the `.json` file. `alt` is the one required field.
 
 ## Keep docs in step
 

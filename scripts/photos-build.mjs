@@ -1,21 +1,21 @@
 /**
  * Turns the `photos/` folder into the site's gallery. No code involved.
  *
- * Drop image files into `photos/` and run `npm run photos` — or just commit them,
- * because CI runs this during every deploy. For each source image this script:
+ * Drop image files and matching `.json` sidecar metadata files into `photos/` and
+ * run `npm run photos` — or just commit them, because CI runs this during every deploy.
+ * For each source image this script:
  *
  *   - generates WebP renditions at up to five widths (never upscaling)
- *   - reads EXIF for camera, lens, focal length, aperture, shutter, ISO and date
- *   - reads IPTC/XMP for title, caption and alt text, so metadata written in
- *     Lightroom or Capture One is picked up with no extra effort
+ *   - reads metadata exclusively from the matching `<name>.json` sidecar file
+ *     (camera, focal length, aperture, shutter speed, ISO, and location)
  *   - builds a tiny inline blur placeholder
  *   - writes src/data/photos.generated.json, which the site reads
  *
- * Conventions, all optional:
+ * Conventions:
  *
  *   01-harbour.jpg        numeric prefix sets the order (stripped from the title)
  *   01-harbour-raw.jpg    pairs as the unprocessed version of 01-harbour.jpg
- *   01-harbour.json       overrides any field the file's own metadata got wrong
+ *   01-harbour.json       sidecar text file containing title, caption, alt, location, and shot metadata
  *
  * Everything it writes is gitignored. `photos/` is the only thing in version
  * control, so the repository never accumulates generated artefacts.
@@ -25,7 +25,6 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 
-import exifr from "exifr";
 import sharp from "sharp";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -74,84 +73,6 @@ const clean = (v) => {
   const s = String(v).trim();
   return s.length > 0 ? s : undefined;
 };
-
-/** Cameras report Make and Model separately, and often redundantly. */
-function cameraName(tags) {
-  const make = clean(tags.Make);
-  const model = clean(tags.Model);
-  if (!make) return model;
-  if (!model) return make;
-  // "NIKON CORPORATION" + "NIKON Z 6" must not become "NIKON CORPORATION NIKON Z 6".
-  const firstWord = make.split(/\s+/)[0].toLowerCase();
-  if (model.toLowerCase().startsWith(firstWord)) return model;
-  return `${make} ${model}`;
-}
-
-/** EXIF stores shutter as a fraction of a second. Photographers read "1/250". */
-function shutterLabel(seconds) {
-  if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds <= 0) return undefined;
-  if (seconds >= 1) return String(Number(seconds.toFixed(1)));
-  return `1/${Math.round(1 / seconds)}`;
-}
-
-function monthYear(date) {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return undefined;
-  return date.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-}
-
-/**
- * Pulls what it can from the file's own metadata.
- *
- * IPTC and XMP are requested explicitly — exifr does not read them by default, and
- * they are where Lightroom and Capture One put the title and caption. That is the
- * whole reason this workflow needs no code: the fields a photographer already fills
- * in while editing arrive with the file.
- */
-async function readEmbedded(buffer, file) {
-  let tags = {};
-  try {
-    tags =
-      (await exifr.parse(buffer, {
-        tiff: true,
-        ifd0: true,
-        exif: true,
-        gps: false, // Deliberately never read. See docs/decisions/0003.
-        iptc: true,
-        xmp: true,
-        translateKeys: true,
-        translateValues: true,
-        reviveValues: true,
-      })) ?? {};
-  } catch (error) {
-    warn(`${file}: could not read metadata (${error.message}). Continuing without it.`);
-  }
-
-  const focal = tags.FocalLength;
-  const aperture = tags.FNumber ?? tags.ApertureValue;
-  const iso = tags.ISO ?? tags.ISOSpeedRatings ?? tags.PhotographicSensitivity;
-
-  return {
-    // IPTC "Object Name" is Lightroom's Title box; XMP dc:title is the same field
-    // under a different standard.
-    title: clean(tags.ObjectName ?? tags.title ?? tags.Headline),
-    caption: clean(tags.Caption ?? tags.description ?? tags.ImageDescription),
-    // IPTC gained a dedicated accessibility field in 2021; few tools write it yet.
-    alt: clean(tags.AltTextAccessibility ?? tags.AltText),
-    location: clean(
-      [clean(tags.City), clean(tags.Country ?? tags.CountryName)].filter(Boolean).join(", "),
-    ),
-    date: monthYear(tags.DateTimeOriginal ?? tags.CreateDate),
-    shot: {
-      camera: cameraName(tags),
-      lens: clean(tags.LensModel ?? tags.Lens ?? tags.LensID),
-      focalLength: typeof focal === "number" ? String(Math.round(focal)) : clean(focal),
-      aperture:
-        typeof aperture === "number" ? String(Number(aperture.toFixed(1))) : clean(aperture),
-      shutter: shutterLabel(tags.ExposureTime),
-      iso: typeof iso === "number" ? iso : clean(iso),
-    },
-  };
-}
 
 /* ---------------------------------------------------------------------------
  * Rendition building
@@ -337,38 +258,47 @@ async function main() {
   };
 
   for (const fileName of mains) {
-    const { rendition, buffer, stem } = await renditionFor(fileName);
-    const embedded = await readEmbedded(buffer, fileName);
+    const { rendition, stem } = await renditionFor(fileName);
 
-    let override = {};
+    let sidecarData = {};
     const sidecar = sidecars.get(stem);
     if (sidecar) {
       try {
-        override = JSON.parse(await readFile(join(SRC_DIR, sidecar), "utf8"));
+        sidecarData = JSON.parse(await readFile(join(SRC_DIR, sidecar), "utf8"));
       } catch (error) {
         warn(`${sidecar}: not valid JSON (${error.message}). Ignoring it.`);
       }
+    } else {
+      warn(`${fileName}: no .json sidecar file found (${stem}.json).`);
     }
 
-    const title = clean(override.title) ?? embedded.title ?? titleFromSlug(stem);
-    const caption = clean(override.caption) ?? embedded.caption;
-    const location = clean(override.location) ?? embedded.location;
-    const date = clean(override.date) ?? embedded.date;
+    const title = clean(sidecarData.title) ?? titleFromSlug(stem);
+    const caption = clean(sidecarData.caption);
+    const location = clean(sidecarData.location ?? sidecarData.metadata?.location);
 
-    // Alt text, best available. A photograph with no description is invisible to a
-    // screen reader, so there is always *something* — but a title is a poor
-    // substitute for a description, and saying so is better than failing the build
-    // and blocking the whole no-code workflow.
-    const alt = clean(override.alt) ?? embedded.alt ?? caption;
+    const alt = clean(sidecarData.alt) ?? caption ?? title;
     if (!alt) {
       warn(
         `${fileName}: no alt text — falling back to the title. ` +
-          `Fill the Caption field on export, or add "alt" to ${stem}.json.`,
+          `Add "alt" to ${stem}.json.`,
       );
     }
 
-    const shot = { ...embedded.shot, ...(override.metadata ?? {}) };
-    const hasShot = Object.values(shot).some((v) => v !== undefined && v !== "");
+    const m = sidecarData.metadata ?? sidecarData;
+    const camera = clean(m.camera);
+    const focalLength = clean(m.focalLength ?? m.focal);
+    const aperture = clean(m.aperture ?? m.fNumber ?? m["F number"]);
+    const shutter = clean(m.shutter ?? m.shutterSpeed ?? m["shutter speed"]);
+    const iso = m.iso !== undefined && m.iso !== "" ? clean(m.iso) : undefined;
+
+    const shot = {};
+    if (camera) shot.camera = camera;
+    if (focalLength) shot.focalLength = focalLength;
+    if (aperture) shot.aperture = aperture;
+    if (shutter) shot.shutter = shutter;
+    if (iso !== undefined) shot.iso = iso;
+
+    const hasShot = Object.keys(shot).length > 0;
 
     const rawName = rawFor.get(stem);
     const raw = rawName ? stripFiles((await renditionFor(rawName)).rendition) : undefined;
@@ -379,7 +309,6 @@ async function main() {
       title,
       ...(caption ? { caption } : {}),
       ...(location ? { location } : {}),
-      ...(date ? { date } : {}),
       image: stripFiles(rendition),
       ...(raw ? { raw } : {}),
       ...(hasShot ? { metadata: shot } : {}),

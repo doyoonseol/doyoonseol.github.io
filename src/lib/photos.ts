@@ -37,7 +37,6 @@ export type Rendition = {
  */
 export type PhotoMetadata = {
   camera?: string;
-  lens?: string;
   focalLength?: string;
   aperture?: string;
   shutter?: string;
@@ -49,15 +48,13 @@ export type Photo = {
   id: string;
   /**
    * Required, never optional. A photograph without a description is invisible to
-   * anyone using a screen reader. The pipeline fills it from IPTC alt text, then the
-   * caption, then the title, warning when it has to fall back that far.
+   * anyone using a screen reader. The pipeline fills it from sidecar JSON alt text,
+   * then caption, then title.
    */
   alt: string;
   title?: string;
   caption?: string;
   location?: string;
-  /** Human-facing, e.g. "March 2026". Never parsed. */
-  date?: string;
   image: Rendition;
   /** Present when an unprocessed version was supplied; drives the RAW pager. */
   raw?: Rendition;
@@ -99,7 +96,6 @@ export function shotDetails(photo: Photo): ReadonlyArray<{ label: string; value:
   };
 
   push("Camera", m.camera);
-  push("Lens", m.lens);
   if (m.focalLength) {
     push("Focal", withUnit(String(m.focalLength), /mm$/i, (s) => `${s}mm`));
   }
@@ -136,10 +132,8 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     alt: "Placeholder frame 01.",
     title: "Untitled I",
     location: "Location pending",
-    date: "2026",
     metadata: {
       camera: "Fujifilm X-T5",
-      lens: "XF 35mm f/1.4 R",
       focalLength: "35",
       aperture: "2",
       shutter: "1/500",
@@ -151,7 +145,6 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     image: placeholder("frame-02.svg", 2000, 3000),
     alt: "Placeholder frame 02.",
     title: "Untitled II",
-    date: "2026",
     metadata: { camera: "Fujifilm X-T5", aperture: "5.6", shutter: "1/125", iso: 640 },
   },
   {
@@ -162,8 +155,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     title: "Untitled III",
     caption:
       "Filler caption. A sentence or two of context sits here when a photograph needs it, and is omitted when it does not.",
-    // Camera and lens only — the usual case for a scanned negative.
-    metadata: { camera: "Pentax 67", lens: "SMC 105mm f/2.4" },
+    metadata: { camera: "Pentax 67" },
   },
   {
     id: "frame-04",
@@ -171,10 +163,8 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     alt: "Placeholder frame 04.",
     title: "Untitled IV",
     location: "Location pending",
-    date: "2025",
     metadata: {
       camera: "Sony A7 IV",
-      lens: "FE 24-70mm f/2.8 GM II",
       focalLength: "50",
       aperture: "4",
       shutter: "1/60",
@@ -187,7 +177,6 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     raw: placeholder("frame-05-raw.svg", 3840, 2160),
     alt: "Placeholder frame 05.",
     title: "Untitled V",
-    date: "2025",
     metadata: { camera: "Sony A7 IV", shutter: "30", aperture: "8", iso: 100 },
   },
   {
@@ -203,10 +192,8 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     alt: "Placeholder frame 07.",
     title: "Untitled VII",
     location: "Location pending",
-    date: "2024",
     metadata: {
       camera: "Fujifilm X100V",
-      lens: "23mm f/2",
       focalLength: "23",
       aperture: "2.8",
       shutter: "1/1000",
