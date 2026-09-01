@@ -27,7 +27,7 @@
 :root {
   /* Warm paper rather than white. Pure #fff next to a photograph reads as a
    * blown highlight and makes prints look muddy by comparison. */
-  --background: oklch(98.6% 0.005 85);
+  --background: oklch(94% 0.005 85);
   --foreground: oklch(23% 0.008 60);
 
   --card: oklch(97.2% 0.006 85);
@@ -258,5 +258,29 @@
     perspective: 1100px;
     perspective-origin: 50% 50%;
     transform-style: preserve-3d;
+  }
+
+  /* Conical gallery spotlight effect cast from above */
+  .gallery-spotlight {
+    position: relative;
+  }
+
+  .gallery-spotlight::before {
+    content: "";
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150vw;
+    height: 120vh;
+    pointer-events: none;
+    z-index: 0;
+    /* Light Mode Spotlight: strong white radial gradient */
+    background: radial-gradient(ellipse 60% 70% at 50% 10%, rgba(255, 255, 255, 0.8) 0%, transparent 60%);
+  }
+
+  .dark .gallery-spotlight::before {
+    /* Dark Mode Spotlight: subtle warm glow over the dark background */
+    background: radial-gradient(ellipse 60% 70% at 50% 10%, rgba(255, 248, 230, 0.15) 0%, transparent 60%);
   }
 }

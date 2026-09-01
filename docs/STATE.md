@@ -34,6 +34,7 @@ Clean-state verified (with `.next/` and `next-env.d.ts` deleted before running).
 | Vertical tick rail with click-to-jump | done |
 | **Folder-driven gallery: drop files in `photos/`, no code** | done, verified with real files |
 | WebP renditions, srcset, LQIP, sidecar JSON metadata extraction | done |
+| Gallery spotlight effect (CSS overlay behind photos) | done |
 | Documentation and steering | done |
 
 ## Not built

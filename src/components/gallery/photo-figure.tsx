@@ -21,7 +21,7 @@ import { IMAGE_SIZES, type Photo } from "@/lib/photos";
  * the fixed box as the URL bar collapses.
  */
 export const SLIDE_LAYOUT =
-  "flex h-full flex-col items-center justify-center gap-6 px-6 py-12 sm:px-10";
+  "gallery-spotlight flex h-full flex-col items-center justify-center gap-6 px-6 py-12 sm:px-10";
 
 /**
  * The photograph is capped below full height so the caption always sits inside
@@ -64,7 +64,7 @@ export function PhotoFigure({
   priority?: boolean;
 }) {
   return (
-    <figure className="flex min-h-0 flex-col items-center gap-5">
+    <figure className="relative z-10 flex min-h-0 flex-col items-center gap-5">
       {photo.raw ? (
         <PhotoCarousel photo={photo} imageClassName={IMAGE_CLASS} priority={priority} />
       ) : (
