@@ -36,7 +36,9 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+import { type ReactNode } from "react";
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // suppressHydrationWarning: next-themes sets the `dark` class on <html>
     // before hydration, so this attribute legitimately differs from the SSR output.
