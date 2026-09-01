@@ -23,16 +23,16 @@ Export: **53 files, 2 MB**.
 | Design tokens, light + dark, warm palette | done |
 | EB Garamond throughout, self-hosted | done |
 | Theme toggle: light / system / dark | done |
-| Landing hero: name, bio, pointer-tracked CSS 3D camera | done, camera is a **placeholder** |
+| Landing hero: name, bio | done |
 | Pinned stage, no scrolling; exactly one photograph visible | done |
 | Commits on intent; continuous scrolling chains sections with no pause | done |
 | Lens: first photograph opens out of it, and closes back into it | done |
 | Photo sections, one per viewport | done |
 | Partial-metadata rendering | done |
-| RAW / edited two-frame pager with arrows and dots | done |
+| Removed RAW image support to reduce data usage | done |
 | Vertical tick rail with click-to-jump | done |
 | **Folder-driven gallery: drop files in `photos/`, no code** | done, verified with real files |
-| WebP renditions, srcset, LQIP, EXIF + IPTC extraction | done |
+| WebP renditions, srcset, LQIP, metadata strictly driven by JSON sidecars | done |
 | Documentation and steering | done |
 
 ## Not built
@@ -51,7 +51,7 @@ Export: **53 files, 2 MB**.
 | Item | Notes |
 |---|---|
 | **The photographs** | `photos/` is empty, so the 8 placeholder frames are showing. Upload into `photos/` — nothing else needed. See [03-adding-photos.md](./03-adding-photos.md) |
-| **3D camera render** | Currently drawn in CSS. Drop-in: `<CameraModel renderSrc="/camera.png" />`. Front-on, transparent, **lens centred in the frame** — the zoom drives into the image centre |
+
 | Bio, tagline, location, email, social | `FILLER` in `src/lib/site.ts` |
 | Titles, captions, alt text, metadata | `FILLER` in `src/lib/photos.ts` |
 | Whether a custom domain is wanted | Would need `public/CNAME` + `SITE.url` |

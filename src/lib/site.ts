@@ -33,15 +33,13 @@ export const SITE = {
    */
   bio: "I photograph quiet things — light on architecture, the gap between weather and mood, people caught mid-thought. Mostly on film, occasionally on a sensor. This is a selection rather than an archive.",
 
-  /** FILLER — shown under the bio. Keep it to a few words. */
-  location: "Based somewhere. Available most places.",
+
 
   /** FILLER — a mailto: link is used; there is no server to accept a form post. */
-  email: "hello@example.com",
+  email: "doyoon.seol@gmail.com",
 
   /** FILLER — remove any entry that does not apply. */
   social: [
-    { label: "Instagram", href: "https://instagram.com/" },
-    { label: "GitHub", href: "https://github.com/doyoonseol" },
+    { label: "Instagram", href: "https://instagram.com/ds_lr779" },
   ],
 } as const;

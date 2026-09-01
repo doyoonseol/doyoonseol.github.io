@@ -4,8 +4,6 @@ import { motion, useTransform } from "motion/react";
 
 import { useDeck } from "@/components/deck/deck-provider";
 import { DeckSection } from "@/components/deck/deck-section";
-import { CameraModel } from "@/components/hero/camera-model";
-import { usePointerTilt } from "@/hooks/use-pointer-tilt";
 import { FIRST_PHOTO_SECTION, INTRO_ID } from "@/lib/deck";
 import { SITE } from "@/lib/site";
 
@@ -22,27 +20,11 @@ import { SITE } from "@/lib/site";
  */
 export function Hero() {
   const { zoom, goTo, reduce } = useDeck();
-  const { rotateX, rotateY } = usePointerTilt({ maxTilt: 9 });
 
   const introOpacity = useTransform(zoom, [0, 0.28], [1, 0]);
   const introLift = useTransform(zoom, [0, 0.28], [0, -40]);
   const cueOpacity = useTransform(zoom, [0, 0.15], [1, 0]);
 
-  // 6× is enough: the expanding aperture fills the screen from here, so the camera
-  // only needs to come close enough that the photograph looks like it opens out of
-  // the glass.
-  const cameraScale = useTransform(zoom, [0, 1], [1, 6]);
-
-  // Relax the tilt as the zoom takes over; a magnified camera should not also skew.
-  const tiltFade = useTransform(zoom, [0.1, 0.7], [1, 0]);
-  const tiltX = useTransform(() => rotateX.get() * tiltFade.get());
-  const tiltY = useTransform(() => rotateY.get() * tiltFade.get());
-
-  // The body falls away late, so the eye is left with glass just as the aperture
-  // takes over. The range matters more for the reverse than the forward: coming
-  // back out of the lens, the camera has to be visible again by the time the
-  // aperture has closed, or the photograph would shrink into empty background.
-  const bodyFade = useTransform(zoom, [0.55, 1], [1, 0]);
 
   return (
     <DeckSection index={0} id={INTRO_ID} label="Introduction">
@@ -58,33 +40,7 @@ export function Hero() {
             {SITE.bio}
           </p>
 
-          <p className="label mt-6 text-muted-foreground/70">{SITE.location}</p>
         </motion.div>
-
-        {/* Perspective sits on this wrapper, outside the scaling element, so the
-            3D space itself is not scaled along with its contents. */}
-        <div className="scene-3d absolute left-1/2 top-1/2 z-10 w-[min(34rem,86vw)]">
-          <motion.div
-            // Positioning goes through motion's own x/y rather than Tailwind's
-            // -translate utilities: both write `transform` and would clobber each other.
-            style={
-              reduce
-                ? { x: "-50%", y: "-50%" }
-                : { x: "-50%", y: "-50%", scale: cameraScale }
-            }
-            className="origin-center"
-          >
-            <motion.div
-              style={
-                reduce ? undefined : { rotateX: tiltX, rotateY: tiltY, opacity: bodyFade }
-              }
-              className="[transform-style:preserve-3d]"
-            >
-              {/* Swap in the owner's asset: <CameraModel renderSrc="/camera.png" /> */}
-              <CameraModel />
-            </motion.div>
-          </motion.div>
-        </div>
 
         {/* A real button, so the transition is reachable by keyboard and by anyone
             who would rather click than discover it by scrolling. */}

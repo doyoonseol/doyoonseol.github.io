@@ -105,7 +105,7 @@ on this site snaps.
 | Section to section | 200ms out, then 280ms in |
 | Into the lens | 850ms zoom, aperture opening 420ms → 1120ms |
 | Out of the lens | 620ms aperture close, 800ms zoom out from 180ms |
-| RAW pager step | 500ms |
+
 | Tick mark change | 500ms |
 | Hover, colour | 300ms |
 | Chrome and rail fade | 500–700ms |
@@ -232,21 +232,6 @@ The handoff at the end of the forward sequence is invisible because the overlay
 renders the same `PhotoFigure` with the same `SLIDE_LAYOUT` as the real slide. **If
 those two ever diverge, it will visibly jump** — which is the whole reason the figure
 is a shared component.
-
-### RAW comparison
-
-Photographs carrying a `raw` version become a two-frame pager, like a post with
-more than one image: the finished photograph first, an arrow to step right to the
-unprocessed version, with page dots below.
-
-The edited image sits in normal flow and defines the box; the RAW is absolutely
-positioned over it at the same size. Paging translates both by 100%. Sizing this way
-avoids the circular-dependency problem of a percentage-width flex track inside a
-shrink-to-fit container, and means the finished photograph determines the slide's
-dimensions.
-
-Horizontal swipes are handled inside the carousel and never reach the deck
-controller, which only claims vertical intent.
 
 ### Slide rail
 

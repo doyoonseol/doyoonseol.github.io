@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
+import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       role="group"
       aria-label="Colour theme"
       className={cn(
-        "glass inline-flex items-center gap-0.5 rounded-full p-0.5",
+        "glass inline-flex items-center gap-1 rounded-full p-1",
         className,
       )}
     >
@@ -68,13 +69,20 @@ export function ThemeToggle({ className }: { className?: string }) {
             title={label}
             onClick={() => setTheme(value)}
             className={cn(
-              "grid size-7 cursor-pointer place-items-center rounded-full transition-colors duration-300",
+              "relative grid size-10 cursor-pointer place-items-center rounded-full transition-colors duration-300",
               selected
-                ? "bg-foreground/10 text-foreground"
+                ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <Icon className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
+            {selected && (
+              <motion.div
+                layoutId="theme-toggle-pill"
+                className="absolute inset-0 rounded-full bg-foreground/10 shadow-sm backdrop-blur-md border border-foreground/5"
+                transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+              />
+            )}
+            <Icon className="relative z-10 size-5" strokeWidth={1.5} aria-hidden="true" />
           </button>
         );
       })}

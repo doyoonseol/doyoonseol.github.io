@@ -43,13 +43,13 @@ alphabetically. Reordering later means renaming files — nothing else.
   "camera": "Fujifilm X-T5",
   "focalLength": "35mm",
   "aperture": "f/2",
-  "shutter": "1/500",
+  "exposure": "1/500",
   "iso": 320,
   "location": "Reykjavík, Iceland"
 }
 ```
 
-Six details are displayed and no others: **camera, focal length, aperture, shutter,
+Six details are displayed and no others: **camera, focal length, aperture, exposure,
 ISO, location**. Plus `title`, optional `caption`, and `alt`.
 
 **Omit anything you do not have.** Absent fields are not rendered — no dashes, no
@@ -67,7 +67,7 @@ Values are normalised at render time, so they can be typed the way you would say
 | Written | Displayed |
 |---|---|
 | `"aperture": "2.8"` or `"f/2.8"` | f/2.8 |
-| `"shutter": "1/250"` | 1/250s |
+| `"exposure": "1/250"` | 1/250s |
 | `"iso": 320` or `"320"` | ISO 320 |
 | `"focalLength": "35"` or `"35mm"` | 35mm |
 
@@ -86,19 +86,7 @@ The single exception is the EXIF **orientation** flag, which is still honoured w
 resizing so a portrait frame shot on a rotated sensor is not served on its side. That
 describes the pixels rather than the photograph.
 
-## RAW alongside the edit
 
-```
-01-harbour.jpg          the finished photograph
-01-harbour-raw.jpg      the unprocessed version
-01-harbour.json         one details file covers both
-```
-
-That slide gains an arrow to page between the two. Export both at **identical pixel
-dimensions** or the frames will not line up.
-
-`src` is always the finished work: it is shown first and sizes the slide. The RAW is
-loaded lazily, so it costs nothing unless somebody looks at it.
 
 ## What happens on upload
 

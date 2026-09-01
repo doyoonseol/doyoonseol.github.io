@@ -67,8 +67,7 @@ app/layout.tsx          EB Garamond, metadata, ThemeProvider, <noscript> fallbac
               │           ├── SlideRail           tick index; reads index, calls goTo
               │           ├── PhotoSlide × N      → DeckSection 1…N
               │           │     └── PhotoFigure
-              │           │           ├── PhotoCarousel  when photo.raw exists
-              │           │           └── PhotoMeta      only present EXIF fields
+              │           │           └── PhotoMeta      metadata from sidecar json
               │           └── closing panel       → DeckSection N+1
               └── LensReveal         first photograph, seen through the aperture
 ```
@@ -93,7 +92,7 @@ deliberately — the overlay must be pixel-identical to the real slide or the en
 lens transition would visibly jump.
 
 Client components: `DeckProvider`, `DeckSection`, `LensReveal`, `Hero`, `PhotoFigure`,
-`PhotoCarousel`, `SlideRail`, `SiteChrome`, `ThemeToggle`, `ThemeProvider`.
+`SlideRail`, `SiteChrome`, `ThemeToggle`, `ThemeProvider`.
 `PhotoSlide`, `SlideDeck`, `PhotoMeta` and `CameraModel` are server components with no
 client cost of their own.
 
@@ -110,13 +109,12 @@ No runtime data fetching. Content is compiled in.
 ```
 photos/                            THE ONLY image source in version control
   01-harbour.jpg                   numeric prefix sets order
-  01-harbour-raw.jpg               pairs as the unprocessed version
-  01-harbour.json                  optional metadata overrides
+  01-harbour.json                  metadata sidecar file
         |
         |  scripts/photos-build.mjs   (sharp + exifr; runs in CI every deploy)
         v
 public/img/*.webp                  renditions, up to 5 widths — gitignored
-src/data/photos.generated.json     manifest: sizes, EXIF, LQIP — gitignored
+src/data/photos.generated.json     manifest: sizes, metadata, LQIP — gitignored
         |
         v
 src/lib/photos.ts                  types + accessors; placeholder fallback

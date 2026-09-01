@@ -25,7 +25,7 @@ No code is touched.
 ```
 photos/01-harbour.jpg          the image                      ← committed
 photos/01-harbour.json         its details                    ← committed
-photos/01-harbour-raw.jpg      optional unprocessed version   ← committed
+
         |
         |  scripts/photos-build.mjs   (runs in CI on every deploy)
         v
@@ -61,7 +61,7 @@ pixels, not the photograph.
 
 ### Exactly six details are displayed
 
-`camera`, `focalLength`, `aperture`, `shutter`, `iso`, `location` — defined once as
+`camera`, `focalLength`, `aperture`, `exposure`, `iso`, `location` — defined once as
 `FIELDS` in the pipeline and as `PhotoDetails` in `src/lib/photos.ts`. `lens` and
 `date` were dropped; they were not on the list.
 

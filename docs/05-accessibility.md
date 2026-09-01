@@ -64,13 +64,9 @@ Decorative separators are `aria-hidden`.
 - **The deck never steals keys from a focused control.** `DeckProvider` checks
   whether the event originated inside a `button`, `a`, `input`, `textarea`, `select`
   or anything with a `tabindex`, and stands down if so. Without that, Space on a
-  button would page the deck instead of activating the button, and the RAW carousel's
-  arrows would be unusable.
+  button would page the deck instead of activating the button.
 - The deck itself is keyboard-navigable: ArrowUp/Down, PageUp/Down, Space, Home, End.
-- **The RAW comparison is two real `<button>` arrows plus page-dot buttons**, each
-  labelled ("Show the unprocessed RAW version") and carrying `aria-current` on the
-  active dot. The off-screen frame is `aria-hidden`, so a screen reader is never
-  offered two competing descriptions of the same photograph.
+
 - **The tick rail is a `<nav>` with a labelled button per photograph**, carrying
   `aria-current` on the active frame. Hit areas are padded far beyond the hairline
   mark they draw, so the target is comfortable on touch.
@@ -132,9 +128,7 @@ Stated plainly rather than implied:
 - Without JavaScript the `<noscript>` fallback unpins the sections and restores
   document scrolling, but only the sections present in the initial HTML are reachable.
   Untested.
-- The RAW carousel's arrow buttons sit over the photograph with a translucent
-  backdrop. Contrast against an arbitrary image is not guaranteed and should be
-  checked against a few real photographs, particularly bright ones.
+
 
 ## Before calling this done
 

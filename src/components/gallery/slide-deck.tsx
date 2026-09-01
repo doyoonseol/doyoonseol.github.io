@@ -39,9 +39,7 @@ export function SlideDeck() {
       >
         <p className="label text-muted-foreground">End of selection</p>
 
-        <p className="max-w-md text-balance text-muted-foreground">
-          Prints, licensing and commissions — get in touch.
-        </p>
+
 
         <a
           href={`mailto:${SITE.email}`}
