@@ -21,7 +21,7 @@ Clean-state verified (with `.next/` and `next-env.d.ts` deleted before running).
 | Static export configured for GitHub Pages | done |
 | `deploy.yml` (push to main) and `ci.yml` (PRs) | written, **never yet run** |
 | `verify-export.sh` artifact guard | done, tested in both directions |
-| Design tokens, light + dark, warm palette | done |
+| Design tokens, light + dark (#f7f7f5, #0a0a0a backgrounds), warm palette | done |
 | EB Garamond throughout, self-hosted | done |
 | Theme toggle: light / system / dark | done |
 | Landing hero: name, bio, pointer-tracked CSS 3D camera | done, camera is a **placeholder** |
@@ -34,7 +34,7 @@ Clean-state verified (with `.next/` and `next-env.d.ts` deleted before running).
 | Vertical tick rail with click-to-jump | done |
 | **Folder-driven gallery: drop files in `photos/`, no code** | done, verified with real files |
 | WebP renditions, srcset, LQIP, sidecar JSON metadata extraction | done |
-| Gallery spotlight effect (CSS overlay behind photos) | done |
+| Ambient photo glow effect (blurred background overlay) | done |
 | Documentation and steering | done |
 
 ## Not built
