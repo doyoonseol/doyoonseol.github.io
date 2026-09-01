@@ -1,123 +1,131 @@
-# 0010 — The gallery is a folder, and CI builds it
+# 0010 — The gallery is a folder, and metadata is a sidecar
 
 **Status:** accepted
 **Date:** 2026-08-31
-**Supersedes:** [0003](./0003-precomputed-image-pipeline.md) — the pipeline is built,
-but it runs in CI rather than locally, and emits WebP rather than AVIF
+**Supersedes:** [0003](./0003-precomputed-image-pipeline.md) (local pipeline, committed
+derivatives, EXIF extraction) and the authored-data half of
+[0005](./0005-partial-metadata.md)
 
 ## Context
 
-The owner asked to add photographs without touching code. Until now the gallery was a
-hand-written TypeScript array in `src/lib/photos.ts`: every new photograph meant
-editing a typed literal, getting the pixel dimensions right by hand, and knowing what
-a `Photo` object looks like.
+The owner asked to be able to add photographs "without having to manipulate any code",
+and to keep adding more later. Until now a photograph meant hand-editing a TypeScript
+array in `src/lib/photos.ts` — which is exactly the wrong shape for that.
 
-[0003](./0003-precomputed-image-pipeline.md) had planned a pipeline, but explicitly
-run **locally** — reasoning that image processing should stay off the deploy critical
-path and that the owner would see size warnings as they worked. That reasoning assumed
-a terminal. It is exactly what the request rules out.
+[0003](./0003-precomputed-image-pipeline.md) had planned a pipeline run **locally**,
+with derivatives committed and originals gitignored. Reasonable on its own terms, and
+incompatible with this requirement: it needs a terminal, a Node install and a git
+client before a single photograph can be published.
 
 ## Decision
 
-**`photos/` is the gallery.** Drop files in, and the site follows.
+**`photos/` is the gallery.** Drop in an image and a matching `.json`, commit, done.
+No code is touched.
 
 ```
-photos/
-  01-harbour.jpg        numeric prefix sets order, stripped from the title
-  01-harbour-raw.jpg    pairs as the unprocessed version
-  01-harbour.json       optional overrides
+photos/01-harbour.jpg          the image                      ← committed
+photos/01-harbour.json         its details                    ← committed
+photos/01-harbour-raw.jpg      optional unprocessed version   ← committed
         |
         |  scripts/photos-build.mjs   (runs in CI on every deploy)
         v
-public/img/*.webp                  renditions, gitignored
-src/data/photos.generated.json     manifest, gitignored
+public/img/01-harbour.<hash>-{480..2560}.webp                 ← gitignored
+src/data/photos.generated.json                                ← gitignored
 ```
 
-`photos/` is the only image source in version control. Everything derived is
-gitignored, so the repository never accumulates generated artefacts — a reversal of
-0003, which committed derivatives.
+`photos/` is the only thing in version control. Everything derived is gitignored, so
+the repository never accumulates build output.
 
-### It runs in CI, which is the whole point
+### The pipeline runs in CI, not locally
 
-Because generation happens during the deploy, adding a photograph is a **file upload
-on github.com**. No clone, no Node, no terminal. That single change is what turns this
-from "a pipeline" into "no code".
+This is the reversal that makes the whole thing work. Because generation happens
+during the deploy, adding a photograph is a **file upload on github.com** — no
+terminal, no local Node, no git client. That single change is what turns this from a
+developer workflow into one the owner can use from any browser.
 
-Renditions are cached with `actions/cache`, keyed on a hash of `photos/` with a
-`restore-keys` prefix fallback. Adding one photograph re-encodes that one photograph
-rather than the whole archive.
+### Metadata comes only from the sidecar
 
-### Metadata comes exclusively from .json sidecars
+The first implementation read camera settings from EXIF and title/caption from IPTC,
+so a Lightroom export needed no sidecar at all. The owner rejected it, and was right
+to: embedded metadata differs between bodies, is absent from scans, is stripped or
+rewritten by some export pipelines, and is invisible in a file browser. What appeared
+on the published site would depend on data that could not be seen or corrected without
+special tools.
 
-Metadata is read exclusively from sidecar `.json` text files provided alongside each image (e.g. `01-harbour.json` for `01-harbour.jpg`).
+A hand-written `.json` is more typing and completely predictable. `exifr` was removed
+as a dependency.
 
-Supported metadata fields are `camera`, `focalLength`, `aperture`, `shutter`, `iso`, and `location` (along with `title`, `caption`, and `alt`). Metadata is not extracted from the photo image files themselves. If a field is omitted from the JSON file, it is assumed not present and omitted from the site.
+The one exception is the EXIF **orientation** flag, still honoured when resizing so a
+portrait frame shot on a rotated sensor is not served sideways. That describes the
+pixels, not the photograph.
+
+### Exactly six details are displayed
+
+`camera`, `focalLength`, `aperture`, `shutter`, `iso`, `location` — defined once as
+`FIELDS` in the pipeline and as `PhotoDetails` in `src/lib/photos.ts`. `lens` and
+`date` were dropped; they were not on the list.
+
+Absent fields are not rendered at all: no dashes, no empty rows. This keeps the
+principle from [0005](./0005-partial-metadata.md) — partial detail is the normal case,
+not an edge case — while narrowing where the values come from.
+
+Unrecognised keys are warned about and ignored, so a typo cannot silently change the
+page.
 
 ### WebP, not AVIF
 
-0003 chose AVIF-primary. Measured on real encode work across the five widths:
+Measured rather than assumed. Across the five widths, for one 4000×2667 source:
 
-| Format | Time | Bytes |
+| Format | Encode | Output |
 |---|---|---|
-| WebP | 754ms | 1039 KB |
-| AVIF | 5037ms | 765 KB |
+| WebP q78 | **754ms** | 1039 KB |
+| AVIF q58 | 5037ms | 765 KB |
 
-AVIF is **6.7× slower for 26% fewer bytes**. Once generation moved into CI that time
-became the owner's wait after uploading, and the bytes buy nothing: at ~1 MB per
-photograph the 1 GB Pages ceiling still allows around 950 of them. WebP.
+AVIF is 6.7× slower for 26% fewer bytes. Since encoding now sits in the deploy path,
+that multiple is time the owner waits after uploading, and the bytes saved buy nothing
+against a 1 GB ceiling that still leaves room for roughly 950 photographs. No JPEG
+fallback either: WebP has been supported since Safari 14, and this design already
+requires Safari 16.4+ via Tailwind v4.
 
-No JPEG fallback either. Tailwind v4 already requires Safari 16.4+, and WebP landed in
-Safari 14, so a fallback ladder would double both encode time and published bytes to
-serve nobody.
+### Renditions are cached across CI runs
 
-### Alt text warns rather than fails
-
-0003 intended the build to **fail** on a photograph without alt text. That is
-incompatible with this workflow: a failed build after a web upload would leave the
-owner with a broken deploy and no obvious fix.
-
-So alt text falls back — IPTC alt → caption → title — and the build prints a warning
-naming every photograph that fell all the way to the title. A title is a poor
-description, and the log says so, but the site stays deployable. This is a genuine
-weakening of the accessibility guarantee and is recorded as such in
-[05-accessibility.md](../05-accessibility.md).
+`actions/cache` keyed on `hashFiles('photos/**')`, with a `photos-` `restore-keys`
+prefix so a changed key still restores the previous cache. Combined with
+content-hashed filenames, uploading one photograph re-encodes one photograph rather
+than the archive.
 
 ## Consequences
 
-- Adding photographs no longer requires a developer, a checkout, or a terminal.
-- **`photos/` is publicly readable**, because the repository is public. The published
-  site caps renditions at 2560px, but the uploaded file is served as-is from GitHub, so
-  the guide asks for ~2560px exports rather than full-resolution originals. This is the
-  main cost of not committing derivatives, and it is a documentation-and-discipline fix
-  rather than a technical one. A private repository would need GitHub Pro for Pages.
-- Dimensions are read from the encoder's own output, after `.rotate()`, so a portrait
-  frame on a rotated sensor is neither sideways nor mis-sized. Hand-entered dimensions
-  were a standing source of stretched images; they are now impossible.
-- Renditions cap at the source width and never upscale. The width ladder appends the
-  source's own width rather than only filtering the standard list — filtering alone
-  under-served small files, and a 900px original topped out at the 480px rendition,
-  displayed at half the detail it had.
-- `src/lib/photos.ts` keeps a placeholder set, used automatically while `photos/` is
-  empty, so the layout stays reviewable before any real work exists.
-- The generated manifest is gitignored, so `npm run photos` is chained ahead of `dev`,
-  `typecheck` and `build`. A fresh clone therefore works with no extra step, at the
-  cost of the pipeline running more than strictly necessary. Committing the manifest
-  would avoid that and would mean a routinely stale generated file in git; keeping
-  generated output entirely out of version control was judged the clearer rule.
+- Adding photographs needs no code, no terminal and no local environment.
+- **Source files are public.** The repository is public, so anything in `photos/` is
+  downloadable at the size uploaded. The site never serves above 2560px, but the
+  source is whatever was provided — hence the standing advice to export at ~2560px
+  rather than uploading full-resolution originals. This is the real cost of the
+  decision and is documented everywhere the owner will look.
+- Deploys are slower, proportional to how many photographs changed.
+- Alt text can no longer be enforced at build time. [0005](./0005-partial-metadata.md)
+  intended the build to fail without it; failing a deploy over a missing caption would
+  defeat the purpose of the folder, so the pipeline warns loudly and falls back to the
+  caption, then the title. **This is a genuine weakening of an accessibility
+  guarantee**, recorded rather than glossed over.
+- Deleting a photograph must prune its renditions. Skipping that on the empty-folder
+  path was a real bug found in testing: `public/` is copied verbatim into the export,
+  so orphaned files stayed published and kept counting against the size budget.
+- `photos/` being empty is a supported state — the site falls back to the generated
+  placeholder set, so the layout stays reviewable before any real work exists.
 
 ## Alternatives considered
 
-**A git-based CMS — Decap, Sveltia, Tina.** A real admin UI with drag-and-drop and
-form fields, committing to the repository. Rejected for now: each needs a hosted OAuth
-proxy or a paid cloud tier to authenticate against GitHub, which adds a service
-dependency and a second thing that can break, for a single-author site whose only
-content type is "a photograph". Worth revisiting if the sidecar files prove annoying —
-the data model here would not need to change, only how the sidecars get written.
+**A git-based CMS** (Decap, Sveltia) at `/admin`, giving a real form-based editor with
+drag-and-drop upload. Genuinely nicer for typing metadata. Rejected for now: it needs
+an OAuth broker, which means either a hosted service or a Cloudflare Worker to
+maintain, for a single-author site where the same job is done by uploading two files.
+Worth revisiting if editing JSON by hand becomes the friction point.
 
-**A hosted CMS — Sanity, Contentful.** Content leaves the repository, needs API keys
-and a rebuild webhook, and puts the archive behind someone else's free tier. Against
-the brief's no-backend premise.
+**A hosted CMS** (Sanity, Contentful). Adds an account, API keys and a rebuild webhook,
+and moves the content out of the repository — which loses the property that the whole
+site is one self-contained thing.
 
-**Keep generation local, commit the derivatives** (0003 as written). Faster deploys and
-keeps originals off GitHub entirely. Rejected: it requires a terminal for every new
-photograph, which is the thing being removed.
+**Keep generation local, commit derivatives** ([0003](./0003-precomputed-image-pipeline.md)).
+Faster deploys and originals never published. Requires a terminal, so it fails the
+actual requirement.

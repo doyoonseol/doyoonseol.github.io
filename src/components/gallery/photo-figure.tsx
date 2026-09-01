@@ -21,7 +21,7 @@ import { IMAGE_SIZES, type Photo } from "@/lib/photos";
  * the fixed box as the URL bar collapses.
  */
 export const SLIDE_LAYOUT =
-  "gallery-spotlight flex h-full flex-col items-center justify-center gap-6 px-6 py-12 sm:px-10";
+  "flex h-full flex-col items-center justify-center gap-6 px-6 py-12 sm:px-10";
 
 /**
  * The photograph is capped below full height so the caption always sits inside
@@ -64,42 +64,24 @@ export function PhotoFigure({
   priority?: boolean;
 }) {
   return (
-    <figure className="relative z-10 flex min-h-0 flex-col items-center gap-8">
-      <div className="relative">
-        {/* Ambient Glow */}
-        <div
-          className="pointer-events-none absolute inset-0 z-0 scale-[1.03] select-none opacity-75 blur-[3rem] saturate-[1.5] dark:opacity-55"
-          aria-hidden="true"
-        >
-          <img
-            src={photo.image.src}
-            alt=""
-            className={IMAGE_CLASS}
-            style={{ objectFit: 'contain' }}
-          />
-        </div>
-
-        {/* Actual Image */}
-        <div className="relative z-10">
-          {photo.raw ? (
-            <PhotoCarousel photo={photo} imageClassName={IMAGE_CLASS} priority={priority} />
-          ) : (
-            <img
-              src={photo.image.src}
-              srcSet={photo.image.srcSet}
-              sizes={IMAGE_SIZES}
-              alt={photo.alt}
-              width={photo.image.width}
-              height={photo.image.height}
-              loading={priority ? "eager" : "lazy"}
-              decoding={priority ? "sync" : "async"}
-              fetchPriority={priority ? "high" : "auto"}
-              style={lqipStyle(photo.image.lqip)}
-              className={IMAGE_CLASS}
-            />
-          )}
-        </div>
-      </div>
+    <figure className="flex min-h-0 flex-col items-center gap-5">
+      {photo.raw ? (
+        <PhotoCarousel photo={photo} imageClassName={IMAGE_CLASS} priority={priority} />
+      ) : (
+        <img
+          src={photo.image.src}
+          srcSet={photo.image.srcSet}
+          sizes={IMAGE_SIZES}
+          alt={photo.alt}
+          width={photo.image.width}
+          height={photo.image.height}
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          fetchPriority={priority ? "high" : "auto"}
+          style={lqipStyle(photo.image.lqip)}
+          className={IMAGE_CLASS}
+        />
+      )}
 
       <figcaption className="flex flex-col items-center gap-3">
         {/* Wall label: frame number, then title. One line, so the caption never
@@ -118,15 +100,10 @@ export function PhotoFigure({
             </>
           )}
 
-          {photo.location && (
-            <>
-              <span aria-hidden="true" className="text-muted-foreground/30">
-                ·
-              </span>
-              <span>{photo.location}</span>
-            </>
-          )}
         </div>
+
+        {/* Everything else — camera, focal length, aperture, shutter, ISO, location —
+            lives in one line below, rendered only where a value was supplied. */}
 
         <PhotoMeta photo={photo} />
 

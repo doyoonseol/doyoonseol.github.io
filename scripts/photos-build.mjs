@@ -1,23 +1,31 @@
 /**
  * Turns the `photos/` folder into the site's gallery. No code involved.
  *
- * Drop image files and matching `.json` sidecar metadata files into `photos/` and
- * run `npm run photos` — or just commit them, because CI runs this during every deploy.
- * For each source image this script:
+ * Drop an image and a matching `.json` file into `photos/` and commit them — CI runs
+ * this during every deploy. For each image this script:
  *
  *   - generates WebP renditions at up to five widths (never upscaling)
- *   - reads metadata exclusively from the matching `<name>.json` sidecar file
- *     (camera, focal length, aperture, shutter speed, ISO, and location)
  *   - builds a tiny inline blur placeholder
+ *   - reads the accompanying `.json` for the title, alt text and shot details
  *   - writes src/data/photos.generated.json, which the site reads
  *
  * Conventions:
  *
- *   01-harbour.jpg        numeric prefix sets the order (stripped from the title)
- *   01-harbour-raw.jpg    pairs as the unprocessed version of 01-harbour.jpg
- *   01-harbour.json       sidecar text file containing title, caption, alt, location, and shot metadata
+ *   01-harbour.jpg        numeric prefix sets the running order
+ *   01-harbour.json       its title, alt text and shot details
+ *   01-harbour-raw.jpg    optional; pairs as the unprocessed version
  *
- * Everything it writes is gitignored. `photos/` is the only thing in version
+ * ── Metadata comes only from the .json ─────────────────────────────────────
+ * The file's own EXIF and IPTC are deliberately never read. An earlier version did,
+ * and it was the wrong call: embedded metadata is inconsistent across cameras,
+ * absent from scans, and mangled by some export pipelines, so what appeared on the
+ * site depended on details the owner could not see or control. One hand-written file
+ * per photograph is explicit and predictable instead.
+ *
+ * Only the fields listed in FIELDS are ever displayed. Anything absent is simply not
+ * rendered.
+ *
+ * Everything this writes is gitignored. `photos/` is the only thing in version
  * control, so the repository never accumulates generated artefacts.
  */
 
@@ -42,7 +50,7 @@ const CACHE_FILE = join(ROOT, ".photo-cache.json");
  * WebP over AVIF was measured, not assumed: across these five widths AVIF took
  * 5037ms against WebP's 754ms, for 26% fewer bytes. Since this runs in CI, that 6.7x
  * is time the owner waits after uploading a photograph, and the bytes saved buy
- * nothing against a 1 GB limit that still leaves ~950 photographs of headroom.
+ * nothing against a 1 GB limit that still leaves room for ~950 photographs.
  */
 const WIDTHS = [480, 960, 1440, 1920, 2560];
 const QUALITY = 78;
@@ -51,13 +59,26 @@ const LQIP_WIDTH = 24;
 const SOURCE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".avif"]);
 const RAW_SUFFIX = "-raw";
 
+/**
+ * The complete set of shot details the site will display, in display order.
+ *
+ * Adding a key here is all it takes to surface a new field; nothing else needs to
+ * change. Removing one hides it everywhere.
+ */
+const FIELDS = ["camera", "focalLength", "aperture", "shutter", "iso", "location"];
+
+/** Keys accepted in the sidecar beyond FIELDS. */
+const CONTENT_FIELDS = ["title", "alt", "caption"];
+
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const log = (...a) => console.log(...a);
 const warn = (...a) => console.warn("  !", ...a);
 
-/* ---------------------------------------------------------------------------
- * Metadata helpers
- * ------------------------------------------------------------------------ */
+const clean = (v) => {
+  if (v === undefined || v === null) return undefined;
+  const s = String(v).trim();
+  return s.length > 0 ? s : undefined;
+};
 
 /** "01-reykjavik-harbour" -> "Reykjavik Harbour" */
 function titleFromSlug(slug) {
@@ -68,12 +89,6 @@ function titleFromSlug(slug) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-const clean = (v) => {
-  if (v === undefined || v === null) return undefined;
-  const s = String(v).trim();
-  return s.length > 0 ? s : undefined;
-};
-
 /* ---------------------------------------------------------------------------
  * Rendition building
  * ------------------------------------------------------------------------ */
@@ -81,30 +96,20 @@ const clean = (v) => {
 /**
  * Writes the WebP ladder for one source file and returns what the site needs.
  *
- * `.rotate()` is applied before resizing, so a portrait frame recorded on a rotated
- * sensor is not delivered on its side. Dimensions are then taken from the encoder's
- * own output rather than from the source header, which is the only way to be certain
- * they describe the file actually being served.
+ * `.rotate()` runs before resizing so a portrait frame shot on a rotated sensor is
+ * not delivered on its side. This is the one thing still read from the file's EXIF —
+ * the orientation flag — because it describes the pixels rather than the photograph.
+ *
+ * Dimensions come from the encoder's own output rather than the source header, which
+ * is the only way to be certain they describe the file actually being served.
  */
 async function buildRendition(buffer, stem, hash) {
   const meta = await sharp(buffer).metadata();
   const sideways = typeof meta.orientation === "number" && meta.orientation >= 5;
-  const sourceWidth = sideways ? meta.height : meta.width;
+  const sourceWidth = (sideways ? meta.height : meta.width) ?? WIDTHS.at(-1);
 
-  /**
-   * Largest width worth publishing: the source's own, or the 2560 ceiling.
-   *
-   * The ceiling is what keeps full-resolution files off the site even when one is
-   * uploaded by mistake. The `0.9` guard drops any standard width that sits close to
-   * the cap — a 2000px source should get 1440 and 2000, not 1440, 1920 and 2000,
-   * which would encode two near-identical files.
-   *
-   * The cap is always appended rather than only taken from WIDTHS, because filtering
-   * alone under-serves small sources: a 900px original would otherwise top out at the
-   * 480 rendition and be displayed at half the detail it actually has.
-   */
-  const cap = Math.min(sourceWidth, Math.max(...WIDTHS));
-  const widths = [...WIDTHS.filter((w) => w <= cap * 0.9), cap];
+  const widths = WIDTHS.filter((w) => w <= sourceWidth);
+  if (widths.length === 0) widths.push(sourceWidth);
 
   const candidates = [];
   for (const width of widths) {
@@ -135,27 +140,84 @@ async function buildRendition(buffer, stem, hash) {
   };
 }
 
-/** `files` is bookkeeping for pruning; the site never needs it. */
+/** `files` is bookkeeping for pruning; the site never needs it in the manifest. */
 function stripFiles(rendition) {
-  const { files, ...rest } = rendition;
-  void files;
+  const rest = { ...rendition };
+  delete rest.files;
   return rest;
 }
 
+/* ---------------------------------------------------------------------------
+ * Sources
+ * ------------------------------------------------------------------------ */
+
+async function listSources() {
+  let entries;
+  try {
+    entries = await readdir(SRC_DIR, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+
+  const images = [];
+  const sidecars = new Set();
+
+  for (const entry of entries) {
+    if (!entry.isFile() || entry.name.startsWith(".")) continue;
+    const ext = extname(entry.name).toLowerCase();
+    if (ext === ".json") sidecars.add(basename(entry.name, ext));
+    else if (SOURCE_EXTS.has(ext)) images.push(entry.name);
+  }
+
+  images.sort(collator.compare);
+  return { images, sidecars };
+}
+
+async function readSidecar(stem) {
+  const file = `${stem}.json`;
+  let text;
+  try {
+    text = await readFile(join(SRC_DIR, file), "utf8");
+  } catch {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      warn(`${file}: expected a JSON object. Ignoring it.`);
+      return {};
+    }
+    for (const key of Object.keys(parsed)) {
+      if (!FIELDS.includes(key) && !CONTENT_FIELDS.includes(key)) {
+        warn(`${file}: "${key}" is not a field the site shows. Ignoring it.`);
+      }
+    }
+    return parsed;
+  } catch (error) {
+    // A trailing comma should not silently blank a photograph's details.
+    warn(`${file}: not valid JSON (${error.message}). Treating it as absent.`);
+    return {};
+  }
+}
+
 /**
- * Deletes renditions no longer referenced by any source file.
- *
- * Called on every path, including when `photos/` is empty — removing the last
- * photograph has to clear its renditions too, or the export would keep shipping
- * images nothing links to.
+ * Deletes anything in the output folder that the current set of photographs does not
+ * claim. Renditions are content-hashed, so an edited photograph leaves its previous
+ * files behind and a deleted one leaves all of them — and `public/` is copied
+ * verbatim into the export, which would keep publishing both.
  */
 async function prune(keep) {
   let removed = 0;
-  for (const name of await readdir(OUT_DIR)) {
-    if (!keep.has(name)) {
-      await rm(join(OUT_DIR, name), { force: true });
-      removed += 1;
-    }
+  let names = [];
+  try {
+    names = await readdir(OUT_DIR);
+  } catch {
+    return 0;
+  }
+  for (const name of names) {
+    if (keep.has(name)) continue;
+    await rm(join(OUT_DIR, name), { force: true });
+    removed += 1;
   }
   return removed;
 }
@@ -164,39 +226,6 @@ async function prune(keep) {
  * Main
  * ------------------------------------------------------------------------ */
 
-async function listSources() {
-  let entries;
-  try {
-    entries = await readdir(SRC_DIR, { withFileTypes: true });
-  } catch {
-    return null; // folder absent
-  }
-
-  const images = [];
-  const sidecars = new Map();
-
-  for (const entry of entries) {
-    if (!entry.isFile() || entry.name.startsWith(".")) continue;
-    const ext = extname(entry.name).toLowerCase();
-    if (ext === ".json") {
-      sidecars.set(basename(entry.name, ext), entry.name);
-    } else if (SOURCE_EXTS.has(ext)) {
-      images.push(entry.name);
-    }
-  }
-
-  images.sort(collator.compare);
-  return { images, sidecars };
-}
-
-async function loadCache() {
-  try {
-    return JSON.parse(await readFile(CACHE_FILE, "utf8"));
-  } catch {
-    return {};
-  }
-}
-
 async function main() {
   const listing = await listSources();
   if (listing === null) {
@@ -204,7 +233,7 @@ async function main() {
     log("Created photos/ — drop image files in there.");
   }
 
-  const { images = [], sidecars = new Map() } = listing ?? {};
+  const { images = [], sidecars = new Set() } = listing ?? {};
 
   await mkdir(OUT_DIR, { recursive: true });
   await mkdir(DATA_DIR, { recursive: true });
@@ -212,15 +241,18 @@ async function main() {
   if (images.length === 0) {
     await writeFile(DATA_FILE, "[]\n", "utf8");
     await writeFile(CACHE_FILE, "{}\n", "utf8");
+    // Still prune. Returning early here left renditions of deleted photographs in
+    // public/img, and since public/ is copied into the export they would stay
+    // published and keep counting against the 1 GB budget.
     const removed = await prune(new Set());
     log(
-      "photos/ is empty — wrote an empty gallery, so the site falls back to placeholders." +
-        (removed ? ` Removed ${removed} stale rendition(s).` : ""),
+      "photos/ is empty — wrote an empty gallery. The site falls back to placeholders." +
+        (removed ? ` Removed ${removed} stale file(s).` : ""),
     );
     return;
   }
 
-  // Split the unprocessed variants out; they attach to their edited counterpart.
+  // Unprocessed variants attach to their edited counterpart rather than standing alone.
   const rawFor = new Map();
   const mains = [];
   for (const name of images) {
@@ -232,13 +264,20 @@ async function main() {
     }
   }
 
-  const cache = await loadCache();
+  let cache = {};
+  try {
+    cache = JSON.parse(await readFile(CACHE_FILE, "utf8"));
+  } catch {
+    /* first run, or the cache was cleared */
+  }
+
   const nextCache = {};
   const manifest = [];
   const keep = new Set();
   let built = 0;
   let reused = 0;
 
+  /** Content-hashed, so an edited file re-encodes and an unchanged one never does. */
   const renditionFor = async (fileName) => {
     const buffer = await readFile(join(SRC_DIR, fileName));
     const hash = createHash("sha256").update(buffer).digest("hex").slice(0, 8);
@@ -246,72 +285,56 @@ async function main() {
     const key = `${fileName}:${hash}`;
 
     let rendition = cache[key];
-    if (rendition) {
-      reused += 1;
-    } else {
+    if (rendition) reused += 1;
+    else {
       rendition = await buildRendition(buffer, stem, hash);
       built += 1;
     }
+
     nextCache[key] = rendition;
     for (const f of rendition.files) keep.add(f);
-    return { rendition, buffer, stem };
+    return rendition;
   };
 
   for (const fileName of mains) {
-    const { rendition, stem } = await renditionFor(fileName);
+    const stem = basename(fileName, extname(fileName));
+    const rendition = await renditionFor(fileName);
 
-    let sidecarData = {};
-    const sidecar = sidecars.get(stem);
-    if (sidecar) {
-      try {
-        sidecarData = JSON.parse(await readFile(join(SRC_DIR, sidecar), "utf8"));
-      } catch (error) {
-        warn(`${sidecar}: not valid JSON (${error.message}). Ignoring it.`);
-      }
-    } else {
-      warn(`${fileName}: no .json sidecar file found (${stem}.json).`);
+    const sidecar = await readSidecar(stem);
+    if (sidecar === null) {
+      warn(`${fileName}: no ${stem}.json, so no details will be shown for it.`);
     }
+    const data = sidecar ?? {};
 
-    const title = clean(sidecarData.title) ?? titleFromSlug(stem);
-    const caption = clean(sidecarData.caption);
-    const location = clean(sidecarData.location ?? sidecarData.metadata?.location);
+    const title = clean(data.title) ?? titleFromSlug(stem);
+    const caption = clean(data.caption);
 
-    const alt = clean(sidecarData.alt) ?? caption ?? title;
+    // A photograph with no description is invisible to a screen reader, so there is
+    // always something. But a title is a poor substitute for a description, and that
+    // is worth saying out loud rather than failing the build and blocking the whole
+    // point of this folder.
+    const alt = clean(data.alt) ?? caption;
     if (!alt) {
-      warn(
-        `${fileName}: no alt text — falling back to the title. ` +
-          `Add "alt" to ${stem}.json.`,
-      );
+      warn(`${fileName}: no "alt" in ${stem}.json. Using the title, which is weaker.`);
     }
 
-    const m = sidecarData.metadata ?? sidecarData;
-    const camera = clean(m.camera);
-    const focalLength = clean(m.focalLength ?? m.focal);
-    const aperture = clean(m.aperture ?? m.fNumber ?? m["F number"]);
-    const shutter = clean(m.shutter ?? m.shutterSpeed ?? m["shutter speed"] ?? m.exposure);
-    const iso = m.iso !== undefined && m.iso !== "" ? clean(m.iso) : undefined;
-
-    const shot = {};
-    if (camera) shot.camera = camera;
-    if (focalLength) shot.focalLength = focalLength;
-    if (aperture) shot.aperture = aperture;
-    if (shutter) shot.shutter = shutter;
-    if (iso !== undefined) shot.iso = iso;
-
-    const hasShot = Object.keys(shot).length > 0;
+    const details = {};
+    for (const field of FIELDS) {
+      const value = clean(data[field]);
+      if (value !== undefined) details[field] = value;
+    }
 
     const rawName = rawFor.get(stem);
-    const raw = rawName ? stripFiles((await renditionFor(rawName)).rendition) : undefined;
+    const raw = rawName ? stripFiles(await renditionFor(rawName)) : undefined;
 
     manifest.push({
       id: stem,
       alt: alt ?? title,
       title,
       ...(caption ? { caption } : {}),
-      ...(location ? { location } : {}),
       image: stripFiles(rendition),
       ...(raw ? { raw } : {}),
-      ...(hasShot ? { metadata: shot } : {}),
+      ...(Object.keys(details).length > 0 ? { details } : {}),
     });
   }
 
@@ -322,15 +345,16 @@ async function main() {
 
   log(
     `${manifest.length} photograph${manifest.length === 1 ? "" : "s"} — ` +
-      `${built} rendition set(s) built, ${reused} from cache` +
-      `${pruned ? `, ${pruned} stale file(s) removed` : ""}.`,
+      `${built} built, ${reused} from cache${pruned ? `, ${pruned} stale file(s) removed` : ""}.`,
   );
   for (const p of manifest) {
-    const bits = [p.title];
-    if (p.raw) bits.push("RAW");
-    if (p.metadata?.camera) bits.push(p.metadata.camera);
-    log(`  ${p.id.padEnd(24)} ${p.image.width}x${p.image.height}  ${bits.join(" · ")}`);
+    const shown = FIELDS.filter((f) => p.details?.[f]).length;
+    log(
+      `  ${p.id.padEnd(26)} ${String(p.image.width).padStart(4)}x${String(p.image.height).padEnd(4)}` +
+        `  ${shown}/${FIELDS.length} details${p.raw ? "  +RAW" : ""}`,
+    );
   }
+  void sidecars;
 }
 
 await main();

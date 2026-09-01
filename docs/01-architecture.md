@@ -113,16 +113,21 @@ photos/                            THE ONLY image source in version control
   01-harbour-raw.jpg               pairs as the unprocessed version
   01-harbour.json                  optional metadata overrides
         |
-        |  scripts/photos-build.mjs   (sharp; runs in CI every deploy)
+        |  scripts/photos-build.mjs   (sharp + exifr; runs in CI every deploy)
         v
 public/img/*.webp                  renditions, up to 5 widths — gitignored
-src/data/photos.generated.json     manifest: sizes, metadata, LQIP — gitignored
+src/data/photos.generated.json     manifest: sizes, EXIF, LQIP — gitignored
         |
         v
 src/lib/photos.ts                  types + accessors; placeholder fallback
 ```
 
-Metadata is read exclusively from sidecar `.json` text files provided alongside each image (camera, focal length, F number/aperture, shutter speed, ISO, location, title, caption, alt). Metadata is not read from actual photo files. If any metadata field is omitted from the JSON file, it is assumed not present and omitted from the site.
+Per-field resolution order: sidecar `.json` → embedded IPTC/XMP → EXIF → filename.
+Authored data always wins, so regenerating never overwrites something a human wrote.
+
+Metadata comes out of the files because photographers already produce it: EXIF holds
+the camera details, and IPTC Title/Caption are what Lightroom writes. `exifr` is asked
+for IPTC and XMP explicitly — neither is read by default.
 
 `src/lib/photos.ts` falls back to a placeholder set while `photos/` is empty, so the
 layout stays reviewable before real work exists. `src/lib/site.ts` holds site-level

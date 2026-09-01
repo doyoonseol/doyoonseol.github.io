@@ -1,0 +1,47 @@
+[
+  {
+    "id": "01-City_Hall",
+    "alt": "City Hall",
+    "title": "City Hall",
+    "image": {
+      "src": "/img/01-City_Hall.47cfd153-2560.webp",
+      "srcSet": "/img/01-City_Hall.47cfd153-480.webp 480w, /img/01-City_Hall.47cfd153-960.webp 960w, /img/01-City_Hall.47cfd153-1440.webp 1440w, /img/01-City_Hall.47cfd153-1920.webp 1920w, /img/01-City_Hall.47cfd153-2560.webp 2560w",
+      "width": 2560,
+      "height": 3200,
+      "lqip": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAADQBACdASoYAB4APu1qr1CppaQiqAqpMB2JQAAETPagAddILTI7vjbOgjU7pEz+OAD+7HwSpSrLH2Fjh8k1UN52gIfxpis0co5rjCR1AY5aRxJ8X4H3fQI31sMd7FxbTF562Eoml7mvGvWPYW7BgJdHWNIU0SAQa2JvSq4c12bD7qOAUAA="
+    },
+    "details": {
+      "location": "Philadelphia"
+    }
+  },
+  {
+    "id": "02-Train",
+    "alt": "Amtrak",
+    "title": "Amtrak",
+    "image": {
+      "src": "/img/02-Train.0cdbcabe-2560.webp",
+      "srcSet": "/img/02-Train.0cdbcabe-480.webp 480w, /img/02-Train.0cdbcabe-960.webp 960w, /img/02-Train.0cdbcabe-1440.webp 1440w, /img/02-Train.0cdbcabe-1920.webp 1920w, /img/02-Train.0cdbcabe-2560.webp 2560w",
+      "width": 2560,
+      "height": 1600,
+      "lqip": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAACwAwCdASoYAA8APu1iqU2ppaOiMAgBMB2JQBadBFG/t+pMJBWaJAD+3JmcWeXwOSQKidPr5CfnwUYOI1Dh5zf/nYr2jRZf2r2yKLiwkr1TFEOhNop9rtqD1enmUHL4MjYz9j0hwbZ2h2JDhf18p1Bpo+r0piTpow3nV2SDVWcAAA=="
+    },
+    "details": {
+      "location": "Philadelphia"
+    }
+  },
+  {
+    "id": "03-Bridge",
+    "alt": "Market Street Bridge",
+    "title": "Market Street Bridge",
+    "image": {
+      "src": "/img/03-Bridge.12064dd3-2560.webp",
+      "srcSet": "/img/03-Bridge.12064dd3-480.webp 480w, /img/03-Bridge.12064dd3-960.webp 960w, /img/03-Bridge.12064dd3-1440.webp 1440w, /img/03-Bridge.12064dd3-1920.webp 1920w, /img/03-Bridge.12064dd3-2560.webp 2560w",
+      "width": 2560,
+      "height": 1707,
+      "lqip": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAADwAwCdASoYABAAPu1iqU2ppaQiMAgBMB2JQBdmUABqOdr0cVqj6s4AAP7UZEfnliEAW/GwesJwDuS3MDu3FXG3qRLEY3GZmHqztJgz262pY9kJZ4mjpdkg9j64l/5vtf1lylLCm1k8bS20eQ59dnZwAAA="
+    },
+    "details": {
+      "location": "Philadelphia"
+    }
+  }
+]

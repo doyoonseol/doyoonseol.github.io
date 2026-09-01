@@ -12,7 +12,7 @@
     "build": "npm run photos && next build",
     "preview": "npx --yes serve@14 out -l 3000",
     "lint": "eslint",
-    "typecheck": "npm run photos && next typegen && tsc --noEmit",
+    "typecheck": "npm run photos && tsc --noEmit",
     "verify:export": "bash scripts/verify-export.sh out",
     "verify": "npm run typecheck && npm run lint && npm run build && npm run verify:export"
   },

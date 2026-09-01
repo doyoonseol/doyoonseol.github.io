@@ -1,11 +1,7 @@
 # Current state
 
-**Last updated:** 2026-09-01
+**Last updated:** 2026-08-30
 **Phase:** first draft built, awaiting owner feedback and real content.
-
-### Recent Updates
-- Resolved an opacity subscription race condition in `DeckSection` that prevented subsequent gallery images from displaying.
-- Added support for the `exposure` alias in `.json` metadata sidecars as an alternative to `shutter`.
 
 This file is the handoff point between sessions. Update it in the same commit as
 the work it describes. If it disagrees with the code, the code wins and this file
@@ -17,7 +13,6 @@ is a bug.
 
 `npm run verify` (typecheck + lint + build + export validation) exits 0.
 Export: **53 files, 2 MB**.
-Clean-state verified (with `.next/` and `next-env.d.ts` deleted before running).
 
 | Area | Status |
 |---|---|
@@ -25,7 +20,7 @@ Clean-state verified (with `.next/` and `next-env.d.ts` deleted before running).
 | Static export configured for GitHub Pages | done |
 | `deploy.yml` (push to main) and `ci.yml` (PRs) | written, **never yet run** |
 | `verify-export.sh` artifact guard | done, tested in both directions |
-| Design tokens, light + dark (#f7f7f5, #0a0a0a backgrounds), warm palette | done |
+| Design tokens, light + dark, warm palette | done |
 | EB Garamond throughout, self-hosted | done |
 | Theme toggle: light / system / dark | done |
 | Landing hero: name, bio, pointer-tracked CSS 3D camera | done, camera is a **placeholder** |
@@ -37,8 +32,7 @@ Clean-state verified (with `.next/` and `next-env.d.ts` deleted before running).
 | RAW / edited two-frame pager with arrows and dots | done |
 | Vertical tick rail with click-to-jump | done |
 | **Folder-driven gallery: drop files in `photos/`, no code** | done, verified with real files |
-| WebP renditions, srcset, LQIP, sidecar JSON metadata extraction | done |
-| Ambient photo glow effect (blurred background overlay) | done |
+| WebP renditions, srcset, LQIP, EXIF + IPTC extraction | done |
 | Documentation and steering | done |
 
 ## Not built

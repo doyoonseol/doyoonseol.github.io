@@ -4,16 +4,25 @@
 **Date:** 2026-08-30
 
 > **Still current:** precomputing every rendition ahead of time, capping published
-> output at 2560px, never upscaling, keeping generated and authored metadata separate,
-> stripping GPS, and inline LQIP.
+> output at 2560px, never upscaling, never publishing originals or reading GPS, and
+> inline LQIP.
 >
-> **Superseded:** where it runs and what it emits. This record has the pipeline running
-> **locally** with derivatives **committed**, and AVIF as the primary format. The owner
-> needs to add photographs without a terminal, so it now runs in **CI**, derivatives are
-> **gitignored**, and the format is **WebP** — AVIF measured 6.7× slower to encode for
-> 26% fewer bytes, which is the wrong trade once that time is someone waiting on a
-> deploy. The intention here to *fail* the build on missing alt text was also softened
-> to a warning, for the reasons in [0010](./0010-folder-driven-gallery.md).
+> **Superseded**, on three counts:
+>
+> 1. **Where it runs.** This record has the pipeline running **locally** with
+>    derivatives **committed**. That needs a terminal, so it cannot satisfy the owner's
+>    requirement to add photographs without touching code. It now runs in **CI** and all
+>    derivatives are **gitignored**.
+> 2. **The format.** AVIF-primary here; **WebP** now. AVIF measured 6.7× slower to
+>    encode for 26% fewer bytes — the wrong trade once that time is someone waiting on a
+>    deploy.
+> 3. **Metadata.** The EXIF and IPTC extraction described here was built and then
+>    **removed**. Embedded metadata proved too inconsistent to publish from, so details
+>    now come only from a hand-written `.json` beside each image, and `exifr` is no
+>    longer a dependency. Only the EXIF orientation flag is still read.
+>
+> The intention to *fail* the build on missing alt text was also softened to a warning.
+> See [0010](./0010-folder-driven-gallery.md).
 
 ## Context
 
@@ -30,16 +39,17 @@ roughly 100 photographs.
 
 ## Decision
 
-Precompute everything with `sharp` in `scripts/photos-build.mjs`, run
-at build time / CI.
+Precompute everything with `sharp` and `exifr` in `scripts/photos-build.ts`, run
+locally on demand rather than in CI.
 
 ```
-photos/                         image source files + sidecar .json files in version control
+_originals/                     full-resolution files, gitignored, never published
         |
-        |  npm run photos
+        |  npm run photos:build
         v
-public/img/<hash>-<w>.webp      generated WebP renditions, 5 widths
-src/data/photos.generated.json  dimensions, metadata, LQIP
+public/img/<hash>.avif          committed derivatives, 5 widths
+public/img/<hash>.jpg           one mid-size fallback
+src/data/photos.generated.json  dimensions, EXIF, LQIP, dominant colour
 ```
 
 For each original: AVIF at 480 / 960 / 1440 / 1920 / 2560px, one JPEG at 1200px as

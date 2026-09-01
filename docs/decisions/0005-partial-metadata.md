@@ -21,14 +21,13 @@ exists.**
 ```ts
 export type PhotoMetadata = {
   camera?: string;
+  lens?: string;
   focalLength?: string;
   aperture?: string;
   shutter?: string;
   iso?: number | string;
 };
 ```
-
-Metadata is read exclusively from `.json` sidecar files (e.g. `01-harbour.json`), never from photo files. The supported metadata fields are `camera`, `focalLength`, `aperture`, `shutter`, `iso`, and `location`. Any field not provided in the sidecar file is assumed not present and omitted from display.
 
 Three consequences follow.
 

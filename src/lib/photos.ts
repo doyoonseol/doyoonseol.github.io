@@ -26,21 +26,27 @@ export type Rendition = {
 };
 
 /**
- * Shot metadata. Every field is optional by design — scanned film carries no EXIF, a
- * manual lens on an adapter reports nothing to the body, borrowed glass goes
- * unrecorded. The UI renders whichever fields exist and stays silent about the rest,
- * so a photograph with only a camera name looks deliberate rather than broken.
+ * The complete set of shot details the site displays, and the only one.
  *
- * Values are strings so they survive whatever the camera wrote. Formatting is
- * normalised at render time by `shotDetails()`, so "2.8", "f/2.8" and "F2.8" all
- * display identically.
+ * These come from the hand-written `.json` beside each image — never from the file's
+ * own EXIF, which is inconsistent across cameras, absent from scans and silently
+ * rewritten by some export pipelines. One explicit file per photograph is
+ * predictable; embedded metadata is not.
+ *
+ * Every field is optional. Anything absent is simply not rendered, so a photograph
+ * with only a camera name reads as deliberate rather than broken — which matters,
+ * because that is exactly what a film scan looks like.
+ *
+ * Values are strings so they survive being typed by hand. Formatting is normalised at
+ * render time by `shotDetails()`, so "2.8", "f/2.8" and "F2.8" all display identically.
  */
-export type PhotoMetadata = {
+export type PhotoDetails = {
   camera?: string;
   focalLength?: string;
   aperture?: string;
   shutter?: string;
   iso?: number | string;
+  location?: string;
 };
 
 export type Photo = {
@@ -48,17 +54,16 @@ export type Photo = {
   id: string;
   /**
    * Required, never optional. A photograph without a description is invisible to
-   * anyone using a screen reader. The pipeline fills it from sidecar JSON alt text,
-   * then caption, then title.
+   * anyone using a screen reader. The pipeline fills it from IPTC alt text, then the
+   * caption, then the title, warning when it has to fall back that far.
    */
   alt: string;
   title?: string;
   caption?: string;
-  location?: string;
   image: Rendition;
   /** Present when an unprocessed version was supplied; drives the RAW pager. */
   raw?: Rendition;
-  metadata?: PhotoMetadata;
+  details?: PhotoDetails;
 };
 
 /**
@@ -86,8 +91,8 @@ const withUnit = (raw: string, test: RegExp, format: (s: string) => string) => {
  * the panel rather than render an empty container.
  */
 export function shotDetails(photo: Photo): ReadonlyArray<{ label: string; value: string }> {
-  const m = photo.metadata;
-  if (!m) return [];
+  const d = photo.details;
+  if (!d) return [];
 
   const rows: Array<{ label: string; value: string }> = [];
   const push = (label: string, value?: string | number) => {
@@ -95,19 +100,20 @@ export function shotDetails(photo: Photo): ReadonlyArray<{ label: string; value:
     if (text) rows.push({ label, value: text });
   };
 
-  push("Camera", m.camera);
-  if (m.focalLength) {
-    push("Focal", withUnit(String(m.focalLength), /mm$/i, (s) => `${s}mm`));
+  push("Camera", d.camera);
+  if (d.focalLength) {
+    push("Focal length", withUnit(String(d.focalLength), /mm$/i, (s) => `${s}mm`));
   }
-  if (m.aperture) {
-    push("Aperture", withUnit(String(m.aperture), /^f\//i, (s) => `f/${s.replace(/^f/i, "")}`));
+  if (d.aperture) {
+    push("Aperture", withUnit(String(d.aperture), /^f\//i, (s) => `f/${s.replace(/^f/i, "")}`));
   }
-  if (m.shutter) {
-    push("Shutter", withUnit(String(m.shutter), /s$/i, (s) => `${s}s`));
+  if (d.shutter) {
+    push("Shutter", withUnit(String(d.shutter), /s$/i, (s) => `${s}s`));
   }
-  if (m.iso !== undefined && m.iso !== "") {
-    push("ISO", withUnit(String(m.iso), /^iso/i, (s) => `ISO ${s}`));
+  if (d.iso !== undefined && d.iso !== "") {
+    push("ISO", withUnit(String(d.iso), /^iso/i, (s) => `ISO ${s}`));
   }
+  push("Location", d.location);
 
   return rows;
 }
@@ -124,6 +130,11 @@ const placeholder = (file: string, width: number, height: number): Rendition => 
   lqip: "",
 });
 
+/**
+ * Completeness is varied on purpose. Frame 03 carries only a camera, frame 06 only a
+ * location, frame 08 nothing at all. If the layout holds across all of these it will
+ * hold for whatever the real archive turns out to contain.
+ */
 const PLACEHOLDERS: ReadonlyArray<Photo> = [
   {
     id: "frame-01",
@@ -131,13 +142,13 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     raw: placeholder("frame-01-raw.svg", 3000, 2000),
     alt: "Placeholder frame 01.",
     title: "Untitled I",
-    location: "Location pending",
-    metadata: {
+    details: {
       camera: "Fujifilm X-T5",
       focalLength: "35",
       aperture: "2",
       shutter: "1/500",
       iso: 320,
+      location: "Location pending",
     },
   },
   {
@@ -145,7 +156,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     image: placeholder("frame-02.svg", 2000, 3000),
     alt: "Placeholder frame 02.",
     title: "Untitled II",
-    metadata: { camera: "Fujifilm X-T5", aperture: "5.6", shutter: "1/125", iso: 640 },
+    details: { camera: "Fujifilm X-T5", aperture: "5.6", shutter: "1/125", iso: 640 },
   },
   {
     id: "frame-03",
@@ -155,20 +166,21 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     title: "Untitled III",
     caption:
       "Filler caption. A sentence or two of context sits here when a photograph needs it, and is omitted when it does not.",
-    metadata: { camera: "Pentax 67" },
+    // Camera only — the usual case for a scanned negative.
+    details: { camera: "Pentax 67" },
   },
   {
     id: "frame-04",
     image: placeholder("frame-04.svg", 2400, 2400),
     alt: "Placeholder frame 04.",
     title: "Untitled IV",
-    location: "Location pending",
-    metadata: {
+    details: {
       camera: "Sony A7 IV",
       focalLength: "50",
       aperture: "4",
       shutter: "1/60",
       iso: 1250,
+      location: "Location pending",
     },
   },
   {
@@ -177,27 +189,27 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     raw: placeholder("frame-05-raw.svg", 3840, 2160),
     alt: "Placeholder frame 05.",
     title: "Untitled V",
-    metadata: { camera: "Sony A7 IV", shutter: "30", aperture: "8", iso: 100 },
+    details: { camera: "Sony A7 IV", shutter: "30", aperture: "8", iso: 100 },
   },
   {
     id: "frame-06",
     image: placeholder("frame-06.svg", 2000, 2500),
     alt: "Placeholder frame 06.",
     title: "Untitled VI",
-    metadata: { camera: "Yashica T4" },
+    details: { location: "Location pending" },
   },
   {
     id: "frame-07",
     image: placeholder("frame-07.svg", 3000, 2000),
     alt: "Placeholder frame 07.",
     title: "Untitled VII",
-    location: "Location pending",
-    metadata: {
+    details: {
       camera: "Fujifilm X100V",
       focalLength: "23",
       aperture: "2.8",
       shutter: "1/1000",
       iso: 160,
+      location: "Location pending",
     },
   },
   {
@@ -205,7 +217,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     image: placeholder("frame-08.svg", 3900, 1440),
     alt: "Placeholder frame 08.",
     title: "Untitled VIII",
-    // No metadata at all — proves the slide reads correctly with nothing to show.
+    // Nothing at all — proves the slide reads correctly with no details to show.
   },
 ];
 
