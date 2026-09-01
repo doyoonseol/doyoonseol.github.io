@@ -27,7 +27,7 @@
 :root {
   /* Warm paper rather than white. Pure #fff next to a photograph reads as a
    * blown highlight and makes prints look muddy by comparison. */
-  --background: oklch(98.6% 0.005 85);
+  --background: #E5E4E0;
   --foreground: oklch(23% 0.008 60);
 
   --card: oklch(97.2% 0.006 85);
@@ -67,7 +67,7 @@
 .dark {
   /* Warm near-black. Deep enough that photographs appear self-illuminated,
    * warm enough to avoid the blue cast of a neutral dark theme. */
-  --background: oklch(13.5% 0.004 60);
+  --background: #1A1A18;
   --foreground: oklch(92% 0.006 85);
 
   --card: oklch(17% 0.005 65);
