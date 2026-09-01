@@ -63,10 +63,10 @@ const SOURCE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", 
  * Adding a key here is all it takes to surface a new field; nothing else needs to
  * change. Removing one hides it everywhere.
  */
-const FIELDS = ["camera", "focalLength", "aperture", "shutter", "iso", "location"];
+const FIELDS = ["camera", "focalLength", "aperture", "exposure", "iso"];
 
 /** Keys accepted in the sidecar beyond FIELDS. */
-const CONTENT_FIELDS = ["title", "alt", "caption"];
+const CONTENT_FIELDS = ["title", "alt", "caption", "location", "metadata"];
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 const log = (...a) => console.log(...a);
@@ -307,8 +307,13 @@ async function main() {
     }
 
     const details = {};
+    if (data.location !== undefined) {
+      const loc = clean(data.location);
+      if (loc) details.location = loc;
+    }
+    const meta = data.metadata || {};
     for (const field of FIELDS) {
-      const value = clean(data[field]);
+      const value = clean(meta[field]);
       if (value !== undefined) details[field] = value;
     }
 
@@ -333,10 +338,10 @@ async function main() {
       `${built} built, ${reused} from cache${pruned ? `, ${pruned} stale file(s) removed` : ""}.`,
   );
   for (const p of manifest) {
-    const shown = FIELDS.filter((f) => p.details?.[f]).length;
+    const shown = Object.keys(p.details || {}).length;
     log(
       `  ${p.id.padEnd(26)} ${String(p.image.width).padStart(4)}x${String(p.image.height).padEnd(4)}` +
-        `  ${shown}/${FIELDS.length} details`,
+        `  ${shown} details`,
     );
   }
   void sidecars;

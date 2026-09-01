@@ -44,7 +44,7 @@ export type PhotoDetails = {
   camera?: string;
   focalLength?: string;
   aperture?: string;
-  shutter?: string;
+  exposure?: string;
   iso?: number | string;
   location?: string;
 };
@@ -105,8 +105,8 @@ export function shotDetails(photo: Photo): ReadonlyArray<{ label: string; value:
   if (d.aperture) {
     push("Aperture", withUnit(String(d.aperture), /^f\//i, (s) => `f/${s.replace(/^f/i, "")}`));
   }
-  if (d.shutter) {
-    push("Shutter", withUnit(String(d.shutter), /s$/i, (s) => `${s}s`));
+  if (d.exposure) {
+    push("Shutter", withUnit(String(d.exposure), /s$/i, (s) => `${s}s`));
   }
   if (d.iso !== undefined && d.iso !== "") {
     push("ISO", withUnit(String(d.iso), /^iso/i, (s) => `ISO ${s}`));
@@ -143,7 +143,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
       camera: "Fujifilm X-T5",
       focalLength: "35",
       aperture: "2",
-      shutter: "1/500",
+      exposure: "1/500",
       iso: 320,
       location: "Location pending",
     },
@@ -153,7 +153,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     image: placeholder("frame-02.svg", 2000, 3000),
     alt: "Placeholder frame 02.",
     title: "Untitled II",
-    details: { camera: "Fujifilm X-T5", aperture: "5.6", shutter: "1/125", iso: 640 },
+    details: { camera: "Fujifilm X-T5", aperture: "5.6", exposure: "1/125", iso: 640 },
   },
   {
     id: "frame-03",
@@ -174,7 +174,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
       camera: "Sony A7 IV",
       focalLength: "50",
       aperture: "4",
-      shutter: "1/60",
+      exposure: "1/60",
       iso: 1250,
       location: "Location pending",
     },
@@ -184,7 +184,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
     image: placeholder("frame-05.svg", 3840, 2160),
     alt: "Placeholder frame 05.",
     title: "Untitled V",
-    details: { camera: "Sony A7 IV", shutter: "30", aperture: "8", iso: 100 },
+    details: { camera: "Sony A7 IV", exposure: "30", aperture: "8", iso: 100 },
   },
   {
     id: "frame-06",
@@ -202,7 +202,7 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
       camera: "Fujifilm X100V",
       focalLength: "23",
       aperture: "2.8",
-      shutter: "1/1000",
+      exposure: "1/500",
       iso: 160,
       location: "Location pending",
     },
