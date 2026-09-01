@@ -77,9 +77,9 @@ export function PhotoFigure({
       <figcaption className="flex flex-col items-center gap-3">
         {/* Wall label: frame number, then title. One line, so the caption never
             competes with the photograph for attention. */}
-        <div className="label flex flex-wrap items-center justify-center gap-3 text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-muted-foreground tracking-widest uppercase text-sm sm:text-base">
           {photo.title && (
-            <h2 className="label text-foreground">{photo.title}</h2>
+            <h2 className="text-foreground">{photo.title}</h2>
           )}
           {photo.details?.location && (
             <>
@@ -88,7 +88,7 @@ export function PhotoFigure({
                   ·
                 </span>
               )}
-              <span className="label text-muted-foreground">{photo.details.location}</span>
+              <span className="text-muted-foreground">{photo.details.location}</span>
             </>
           )}
 
