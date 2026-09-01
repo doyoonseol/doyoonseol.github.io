@@ -13,7 +13,6 @@
  *
  *   01-harbour.jpg        numeric prefix sets the running order
  *   01-harbour.json       its title, alt text and shot details
- *   01-harbour-raw.jpg    optional; pairs as the unprocessed version
  *
  * ── Metadata comes only from the .json ─────────────────────────────────────
  * The file's own EXIF and IPTC are deliberately never read. An earlier version did,
@@ -57,7 +56,6 @@ const QUALITY = 78;
 const LQIP_WIDTH = 24;
 
 const SOURCE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".avif"]);
-const RAW_SUFFIX = "-raw";
 
 /**
  * The complete set of shot details the site will display, in display order.
@@ -252,17 +250,7 @@ async function main() {
     return;
   }
 
-  // Unprocessed variants attach to their edited counterpart rather than standing alone.
-  const rawFor = new Map();
-  const mains = [];
-  for (const name of images) {
-    const stem = basename(name, extname(name));
-    if (stem.toLowerCase().endsWith(RAW_SUFFIX)) {
-      rawFor.set(stem.slice(0, -RAW_SUFFIX.length), name);
-    } else {
-      mains.push(name);
-    }
-  }
+  const mains = images;
 
   let cache = {};
   try {
@@ -324,8 +312,6 @@ async function main() {
       if (value !== undefined) details[field] = value;
     }
 
-    const rawName = rawFor.get(stem);
-    const raw = rawName ? stripFiles(await renditionFor(rawName)) : undefined;
 
     manifest.push({
       id: stem,
@@ -333,7 +319,6 @@ async function main() {
       title,
       ...(caption ? { caption } : {}),
       image: stripFiles(rendition),
-      ...(raw ? { raw } : {}),
       ...(Object.keys(details).length > 0 ? { details } : {}),
     });
   }
@@ -351,7 +336,7 @@ async function main() {
     const shown = FIELDS.filter((f) => p.details?.[f]).length;
     log(
       `  ${p.id.padEnd(26)} ${String(p.image.width).padStart(4)}x${String(p.image.height).padEnd(4)}` +
-        `  ${shown}/${FIELDS.length} details${p.raw ? "  +RAW" : ""}`,
+        `  ${shown}/${FIELDS.length} details`,
     );
   }
   void sidecars;

@@ -61,8 +61,6 @@ export type Photo = {
   title?: string;
   caption?: string;
   image: Rendition;
-  /** Present when an unprocessed version was supplied; drives the RAW pager. */
-  raw?: Rendition;
   details?: PhotoDetails;
 };
 
@@ -139,7 +137,6 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
   {
     id: "frame-01",
     image: placeholder("frame-01.svg", 3000, 2000),
-    raw: placeholder("frame-01-raw.svg", 3000, 2000),
     alt: "Placeholder frame 01.",
     title: "Untitled I",
     details: {
@@ -161,7 +158,6 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
   {
     id: "frame-03",
     image: placeholder("frame-03.svg", 3000, 2000),
-    raw: placeholder("frame-03-raw.svg", 3000, 2000),
     alt: "Placeholder frame 03.",
     title: "Untitled III",
     caption:
@@ -186,7 +182,6 @@ const PLACEHOLDERS: ReadonlyArray<Photo> = [
   {
     id: "frame-05",
     image: placeholder("frame-05.svg", 3840, 2160),
-    raw: placeholder("frame-05-raw.svg", 3840, 2160),
     alt: "Placeholder frame 05.",
     title: "Untitled V",
     details: { camera: "Sony A7 IV", shutter: "30", aperture: "8", iso: 100 },

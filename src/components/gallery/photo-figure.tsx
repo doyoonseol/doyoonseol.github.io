@@ -1,6 +1,5 @@
 "use client";
 
-import { PhotoCarousel } from "@/components/gallery/photo-carousel";
 import { PhotoMeta } from "@/components/gallery/photo-meta";
 import { IMAGE_SIZES, type Photo } from "@/lib/photos";
 
@@ -65,23 +64,19 @@ export function PhotoFigure({
 }) {
   return (
     <figure className="flex min-h-0 flex-col items-center gap-5">
-      {photo.raw ? (
-        <PhotoCarousel photo={photo} imageClassName={IMAGE_CLASS} priority={priority} />
-      ) : (
-        <img
-          src={photo.image.src}
-          srcSet={photo.image.srcSet}
-          sizes={IMAGE_SIZES}
-          alt={photo.alt}
-          width={photo.image.width}
-          height={photo.image.height}
-          loading={priority ? "eager" : "lazy"}
-          decoding={priority ? "sync" : "async"}
-          fetchPriority={priority ? "high" : "auto"}
-          style={lqipStyle(photo.image.lqip)}
-          className={IMAGE_CLASS}
-        />
-      )}
+      <img
+        src={photo.image.src}
+        srcSet={photo.image.srcSet}
+        sizes={IMAGE_SIZES}
+        alt={photo.alt}
+        width={photo.image.width}
+        height={photo.image.height}
+        loading={priority ? "eager" : "lazy"}
+        decoding={priority ? "sync" : "async"}
+        fetchPriority={priority ? "high" : "auto"}
+        style={lqipStyle(photo.image.lqip)}
+        className={IMAGE_CLASS}
+      />
 
       <figcaption className="flex flex-col items-center gap-3">
         {/* Wall label: frame number, then title. One line, so the caption never
