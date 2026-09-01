@@ -60,19 +60,29 @@ export function PhotoFigure({
 }) {
   return (
     <figure className="flex min-h-0 flex-col items-center gap-5">
-      <img
-        src={photo.image.src}
-        srcSet={photo.image.srcSet}
-        sizes={IMAGE_SIZES}
-        alt={photo.alt}
-        width={photo.image.width}
-        height={photo.image.height}
-        loading={priority ? "eager" : "lazy"}
-        decoding={priority ? "sync" : "async"}
-        fetchPriority={priority ? "high" : "auto"}
-        style={lqipStyle(photo.image.lqip)}
-        className={IMAGE_CLASS}
-      />
+      <div className="relative isolate inline-flex items-center justify-center">
+        {/* Ambient background glow using the image's own colors */}
+        {photo.image.lqip && (
+          <div
+            className="absolute inset-0 -z-10 scale-105 opacity-40 blur-3xl saturate-150 transition-opacity duration-1000 dark:opacity-30"
+            style={lqipStyle(photo.image.lqip)}
+            aria-hidden="true"
+          />
+        )}
+        <img
+          src={photo.image.src}
+          srcSet={photo.image.srcSet}
+          sizes={IMAGE_SIZES}
+          alt={photo.alt}
+          width={photo.image.width}
+          height={photo.image.height}
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          fetchPriority={priority ? "high" : "auto"}
+          style={lqipStyle(photo.image.lqip)}
+          className={IMAGE_CLASS}
+        />
+      </div>
 
       <figcaption className="flex flex-col items-center gap-3">
         {/* Wall label: frame number, then title. One line, so the caption never
