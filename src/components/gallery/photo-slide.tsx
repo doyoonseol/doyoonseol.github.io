@@ -13,12 +13,10 @@ import type { Photo } from "@/lib/photos";
 export function PhotoSlide({
   photo,
   index,
-  total,
   priority = false,
 }: {
   photo: Photo;
   index: number;
-  total: number;
   priority?: boolean;
 }) {
   return (
@@ -28,7 +26,7 @@ export function PhotoSlide({
       label={photo.title ?? `Frame ${index + 1}`}
       className={SLIDE_LAYOUT}
     >
-      <PhotoFigure photo={photo} index={index} total={total} priority={priority} />
+      <PhotoFigure photo={photo} priority={priority} />
     </DeckSection>
   );
 }

@@ -53,13 +53,9 @@ export function lqipStyle(lqip: string) {
  */
 export function PhotoFigure({
   photo,
-  index,
-  total,
   priority = false,
 }: {
   photo: Photo;
-  index: number;
-  total: number;
   priority?: boolean;
 }) {
   return (
@@ -82,16 +78,17 @@ export function PhotoFigure({
         {/* Wall label: frame number, then title. One line, so the caption never
             competes with the photograph for attention. */}
         <div className="label flex flex-wrap items-center justify-center gap-3 text-muted-foreground">
-          <span className="tabular text-muted-foreground/60">
-            {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-          </span>
-
           {photo.title && (
+            <h2 className="label text-foreground">{photo.title}</h2>
+          )}
+          {photo.details?.location && (
             <>
-              <span aria-hidden="true" className="text-muted-foreground/30">
-                ·
-              </span>
-              <h2 className="label text-foreground">{photo.title}</h2>
+              {photo.title && (
+                <span aria-hidden="true" className="text-muted-foreground/30">
+                  ·
+                </span>
+              )}
+              <span className="label text-muted-foreground">{photo.details.location}</span>
             </>
           )}
 

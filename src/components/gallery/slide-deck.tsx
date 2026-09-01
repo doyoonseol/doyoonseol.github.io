@@ -26,7 +26,6 @@ export function SlideDeck() {
           key={photo.id}
           photo={photo}
           index={i}
-          total={PHOTOS.length}
           priority={i === 0}
         />
       ))}

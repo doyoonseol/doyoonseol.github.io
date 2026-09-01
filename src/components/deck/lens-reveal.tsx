@@ -58,7 +58,7 @@ export function LensReveal() {
       className="pointer-events-none fixed inset-0 z-[45] bg-background"
     >
       <div className={SLIDE_LAYOUT}>
-        <PhotoFigure photo={first} index={0} total={PHOTOS.length} priority />
+        <PhotoFigure photo={first} priority />
       </div>
     </motion.div>
   );

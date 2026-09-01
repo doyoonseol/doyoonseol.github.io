@@ -111,7 +111,6 @@ export function shotDetails(photo: Photo): ReadonlyArray<{ label: string; value:
   if (d.iso !== undefined && d.iso !== "") {
     push("ISO", withUnit(String(d.iso), /^iso/i, (s) => `ISO ${s}`));
   }
-  push("Location", d.location);
 
   return rows;
 }
