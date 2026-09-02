@@ -6,6 +6,7 @@ import { useDeck } from "@/components/deck/deck-provider";
 import { DeckSection } from "@/components/deck/deck-section";
 import { FIRST_PHOTO_SECTION, INTRO_ID } from "@/lib/deck";
 import { SITE } from "@/lib/site";
+import { LeafShutter } from "@/components/hero/leaf-shutter";
 
 /**
  * Landing panel: introduction and a camera that tracks the pointer.
@@ -21,17 +22,40 @@ import { SITE } from "@/lib/site";
 export function Hero() {
   const { zoom, goTo, reduce } = useDeck();
 
-  const introOpacity = useTransform(zoom, [0, 0.28], [1, 0]);
-  const introLift = useTransform(zoom, [0, 0.28], [0, -40]);
-  const cueOpacity = useTransform(zoom, [0, 0.15], [1, 0]);
+  // Text fades out during the first quarter (closing begins)
+  // Apple-style: quick fade so content doesn't linger over the mechanism
+  const introOpacity = useTransform(zoom, [0, 0.25], [1, 0]);
+  const cueOpacity = useTransform(zoom, [0, 0.12], [1, 0]);
 
+  // Shutter closes from 0→0.4, holds closed from 0.4→0.6, opens from 0.6→1.0
+  // The hold period lets the background swap happen invisibly behind closed blades
+  const shutterOpenness = useTransform(zoom, [0, 0.4, 0.6, 1], [1, 0, 0, 1]);
+
+  // Apple-style: gentle, confident scale-up over the final 20%
+  // Feels like the camera is slowly pulling you into the photograph
+  const shutterScale = useTransform(zoom, [0, 0.8, 1], [1, 1, 5]);
+
+  // Background crossfade during the hold period — not instant, but a brief dissolve
+  const bgOpacity = useTransform(zoom, [0, 0.45, 0.55, 1], [1, 1, 0, 0]);
 
   return (
     <DeckSection index={0} id={INTRO_ID} label="Introduction">
-      {/* Clipping wrapper: the magnified camera must not widen the page. */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* 
+        This solid background covers the pinned first photograph initially. 
+        It vanishes while the shutter is closed, swapping the "world" behind the aperture. 
+      */}
+      <motion.div
+        className="absolute inset-0 bg-background"
+        style={reduce ? undefined : { opacity: bgOpacity }}
+      />
+
+      {/* The animated leaf shutter blades */}
+      {!reduce && <LeafShutter openness={shutterOpenness} shutterScale={shutterScale} />}
+
+      {/* Foreground text layer */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          style={reduce ? undefined : { opacity: introOpacity, y: introLift }}
+          style={reduce ? undefined : { opacity: introOpacity }}
           className="absolute inset-x-0 top-[11vh] z-20 mx-auto max-w-xl px-6 text-center"
         >
           <h1 className="text-[clamp(2.5rem,7vw,4.25rem)] leading-[1.05]">{SITE.name}</h1>
@@ -48,7 +72,7 @@ export function Hero() {
           type="button"
           onClick={() => goTo(FIRST_PHOTO_SECTION)}
           style={reduce ? undefined : { opacity: cueOpacity }}
-          className="absolute inset-x-0 bottom-8 z-20 mx-auto flex w-fit cursor-pointer flex-col items-center gap-2 rounded-sm px-4 py-2"
+          className="absolute inset-x-0 bottom-8 z-20 mx-auto flex w-fit cursor-pointer flex-col items-center gap-2 rounded-sm px-4 py-2 pointer-events-auto"
         >
           <span className="label text-muted-foreground/80">
             {reduce ? "View photographs" : "Scroll"}

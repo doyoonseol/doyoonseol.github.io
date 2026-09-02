@@ -27,7 +27,7 @@ export function SlideRail({ photos }: { photos: ReadonlyArray<Photo> }) {
     <nav
       aria-label="Photographs"
       className={cn(
-        "fixed right-1 top-1/2 z-40 -translate-y-1/2 transition-opacity duration-500 sm:right-3",
+        "fixed right-1 top-1/2 z-40 -translate-y-1/2 transition-opacity duration-150 sm:right-3",
         activePhoto >= 0 ? "opacity-100" : "pointer-events-none opacity-0",
       )}
     >

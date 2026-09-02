@@ -1,5 +1,4 @@
 import { DeckProvider } from "@/components/deck/deck-provider";
-import { LensReveal } from "@/components/deck/lens-reveal";
 import { SlideDeck } from "@/components/gallery/slide-deck";
 import { Hero } from "@/components/hero/hero";
 import { SiteChrome } from "@/components/site-chrome";
@@ -22,7 +21,6 @@ export default function HomePage() {
         <Hero />
         <SlideDeck />
       </main>
-      <LensReveal />
     </DeckProvider>
   );
 }

@@ -39,7 +39,7 @@ export function SiteChrome() {
           onClick={() => goTo(0)}
           aria-label={`${SITE.name} — back to the beginning`}
           className={cn(
-            "label pointer-events-auto cursor-pointer rounded-sm px-1 py-1 transition-opacity duration-700",
+            "label pointer-events-auto cursor-pointer rounded-sm px-1 py-1 transition-opacity duration-150",
             onIntro ? "pointer-events-none opacity-0" : "opacity-100",
           )}
         >

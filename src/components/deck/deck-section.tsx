@@ -64,8 +64,8 @@ export function DeckSection({
       aria-hidden={!isActive}
       inert={!isActive}
       data-deck-section=""
-      style={{ opacity: isActive ? fade : 0 }}
-      className={`fixed inset-0 ${isActive ? "z-10" : "pointer-events-none z-0"} ${className ?? ""}`}
+      style={{ opacity: isActive || pinned ? fade : 0 }}
+      className={`fixed inset-0 ${isActive ? "z-20" : pinned ? "z-10" : "pointer-events-none z-0"} ${className ?? ""}`}
     >
       {children}
     </motion.section>

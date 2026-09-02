@@ -68,15 +68,15 @@ const SWIPE_THRESHOLD = 56;
 const QUEUE_CAP = 1;
 
 /** Dip between sections: out, then in. Deliberately sequential — see below. */
-const FADE_OUT_S = 0.2;
-const FADE_IN_S = 0.28;
+const FADE_OUT_S = 0.25;
+const FADE_IN_S = 0.35;
 
 /** The lens sequence, intro ↔ first photograph. */
-const ZOOM_S = 0.85;
+const ZOOM_S = 1.7;
 const REVEAL_S = 0.7;
 const REVEAL_DELAY_S = 0.42;
 const CLOSE_S = 0.62;
-const ZOOM_OUT_S = 0.8;
+const ZOOM_OUT_S = 1.6;
 const ZOOM_OUT_DELAY_S = 0.18;
 
 type Deck = {
@@ -157,6 +157,11 @@ export function DeckProvider({ children }: { children: ReactNode }) {
   const lastWheelAt = useRef(0);
   /** Recent wheel magnitudes within RATE_WINDOW_MS, for the scroll-rate gate. */
   const recentRef = useRef<Array<{ at: number; mag: number }>>([]);
+  const resetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  /** Generation counter to invalidate stale rAF callbacks from forward cuts. */
+  const scrubGenRef = useRef(0);
+  /** Shock absorber: completely ignores scroll events until this timestamp. */
+  const shockAbsorberRef = useRef(0);
 
   // The pump and the transition runner call each other. A ref breaks the cycle
   // without either of them needing to be redefined on every render.
@@ -271,9 +276,9 @@ export function DeckProvider({ children }: { children: ReactNode }) {
           zoom.set(0);
           reveal.set(0);
 
-          await animate(fade, 0, { duration: FADE_OUT_S, ease: "easeOut" }).finished;
+          await animate(fade, 0, { duration: FADE_OUT_S, ease: [0.22, 1, 0.36, 1] }).finished;
           commit(to);
-          await animate(fade, 1, { duration: FADE_IN_S, ease: "easeOut" }).finished;
+          await animate(fade, 1, { duration: FADE_IN_S, ease: [0.22, 1, 0.36, 1] }).finished;
         } finally {
           finish();
         }
@@ -342,8 +347,12 @@ export function DeckProvider({ children }: { children: ReactNode }) {
       event.preventDefault();
 
       const now = performance.now();
+      if (now < shockAbsorberRef.current) return;
+
       if (now - lastWheelAt.current > GESTURE_GAP_MS) {
-        accumRef.current = 0;
+        if (indexRef.current !== 0) {
+          accumRef.current = 0;
+        }
         stepsInGestureRef.current = 0;
         recentRef.current.length = 0;
       }
@@ -355,6 +364,75 @@ export function DeckProvider({ children }: { children: ReactNode }) {
       recent.push({ at: now, mag: Math.abs(event.deltaY) });
       while (recent.length > 0 && now - recent[0]!.at > RATE_WINDOW_MS) recent.shift();
       const rate = recent.reduce((sum, r) => sum + r.mag, 0) / RATE_WINDOW_MS;
+
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
+      }
+
+      // ── Linear Scrubbing for Hero ──────────────────────────────────────────
+      if (indexRef.current === 0) {
+        if (busyRef.current) return;
+        
+        // Trackpad/mouse wheel scrubs the zoom linearly over 2500px of delta
+        accumRef.current = clamp(accumRef.current + event.deltaY, 0, 2500);
+        
+        const z = accumRef.current / 2500;
+        
+        // Immediate linear mapping — no lag
+        zoom.set(z);
+
+        if (z >= 1 && event.deltaY > 0) {
+          // Cut to the first photograph. No busy gate — we want scroll-up
+          // events to still be accepted immediately for the reverse scrub.
+          fade.set(1);
+          commit(FIRST_PHOTO_SECTION);
+          
+          // ABSORB MOMENTUM: Set an 800ms "shock absorber" so that leftover trackpad
+          // momentum is completely ignored. The user must physically stop scrolling
+          // and wait a moment before they can proceed to the second photograph.
+          shockAbsorberRef.current = performance.now() + 800;
+          
+          // Reset gesture state so the next real swipe starts clean
+          stepsInGestureRef.current = 0;
+          recentRef.current.length = 0;
+          accumRef.current = 0;
+          
+          // Two frames to let the photo section render+paint before resetting.
+          // A generation counter ensures this callback is invalidated if the
+          // reverse handler fires before it runs.
+          const gen = ++scrubGenRef.current;
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (scrubGenRef.current !== gen) return; // stale, reverse took over
+              zoom.set(0);
+              accumRef.current = 0;
+            });
+          });
+        }
+        return;
+      }
+
+      if (indexRef.current === FIRST_PHOTO_SECTION && event.deltaY < 0) {
+        // Scrolled up on the first photograph: swap to Hero immediately and
+        // start scrubbing from the first event — no busy gate, no dropped frames.
+        if (busyRef.current) return;
+        
+        // Invalidate any pending forward-cut rAF reset
+        scrubGenRef.current++;
+        
+        fade.set(1);
+        zoom.set(1);
+        accumRef.current = 2500;
+        commit(0);
+        
+        // Apply this first scroll delta immediately so the shutter moves right away
+        accumRef.current = clamp(accumRef.current + event.deltaY, 0, 2500);
+        const z = accumRef.current / 2500;
+        zoom.set(z);
+        return;
+      }
+      // ───────────────────────────────────────────────────────────────────────
 
       accumRef.current += event.deltaY;
 
@@ -432,7 +510,7 @@ export function DeckProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("keydown", onKey);
     };
-  }, [goTo, step]);
+  }, [goTo, step, commit, fade, zoom]);
 
   const value = useMemo<Deck>(
     () => ({ index, count: SECTION_COUNT, goTo, fade, zoom, reveal, busy, reduce }),
