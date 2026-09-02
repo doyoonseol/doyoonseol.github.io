@@ -7,6 +7,7 @@ import { DeckSection } from "@/components/deck/deck-section";
 import { FIRST_PHOTO_SECTION, INTRO_ID } from "@/lib/deck";
 import { SITE } from "@/lib/site";
 import { LeafShutter } from "@/components/hero/leaf-shutter";
+import { BioReveal } from "@/components/hero/bio-reveal";
 
 /**
  * Landing panel: introduction and a camera that tracks the pointer.
@@ -22,21 +23,20 @@ import { LeafShutter } from "@/components/hero/leaf-shutter";
 export function Hero() {
   const { zoom, goTo, reduce } = useDeck();
 
-  // Text fades out during the first quarter (closing begins)
-  // Apple-style: quick fade so content doesn't linger over the mechanism
-  const introOpacity = useTransform(zoom, [0, 0.25], [1, 0]);
+  // Text stays solid until the shutter is completely closed (0.55)
+  const introOpacity = useTransform(zoom, [0, 0.55, 0.60], [1, 1, 0]);
   const cueOpacity = useTransform(zoom, [0, 0.12], [1, 0]);
 
-  // Shutter closes from 0→0.4, holds closed from 0.4→0.6, opens from 0.6→1.0
+  // Shutter holds open until text fades (0.25), closes from 0.25→0.55, holds closed from 0.55→0.70, opens from 0.70→1.0
   // The hold period lets the background swap happen invisibly behind closed blades
-  const shutterOpenness = useTransform(zoom, [0, 0.4, 0.6, 1], [1, 0, 0, 1]);
+  const shutterOpenness = useTransform(zoom, [0, 0.25, 0.55, 0.7, 1], [1, 1, 0, 0, 1]);
 
   // Apple-style: gentle, confident scale-up over the final 20%
   // Feels like the camera is slowly pulling you into the photograph
   const shutterScale = useTransform(zoom, [0, 0.8, 1], [1, 1, 5]);
 
   // Background crossfade during the hold period — not instant, but a brief dissolve
-  const bgOpacity = useTransform(zoom, [0, 0.45, 0.55, 1], [1, 1, 0, 0]);
+  const bgOpacity = useTransform(zoom, [0, 0.58, 0.67, 1], [1, 1, 0, 0]);
 
   return (
     <DeckSection index={0} id={INTRO_ID} label="Introduction">
@@ -56,13 +56,14 @@ export function Hero() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           style={reduce ? undefined : { opacity: introOpacity }}
-          className="absolute inset-x-0 top-[11vh] z-20 mx-auto max-w-xl px-6 text-center"
+          className="absolute inset-x-0 top-1/2 z-0 mx-auto max-w-xl -translate-y-1/2 px-6 text-center"
         >
           <h1 className="text-[clamp(2.5rem,7vw,4.25rem)] leading-[1.05]">{SITE.name}</h1>
 
-          <p className="mt-5 text-balance text-[1.05rem] leading-relaxed text-muted-foreground">
-            {SITE.bio}
-          </p>
+          <BioReveal
+            zoom={zoom}
+            className="mt-5 text-xl leading-relaxed text-muted-foreground"
+          />
 
         </motion.div>
 

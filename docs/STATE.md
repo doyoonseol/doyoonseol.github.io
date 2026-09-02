@@ -23,7 +23,7 @@ Export: **53 files, 2 MB**.
 | Design tokens, light + dark, warm palette | done |
 | EB Garamond throughout, self-hosted | done |
 | Theme toggle: light / system / dark | done |
-| Landing hero: name, bio | done |
+| Landing hero: name, bio with scroll-linked rectangle reveal animation | done |
 | Pinned stage, no scrolling; exactly one photograph visible | done |
 | Commits on intent; continuous scrolling chains sections with no pause | done |
 | Lens: first photograph opens out of it, and closes back into it | done |

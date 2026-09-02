@@ -37,7 +37,7 @@ export function SlideDeck() {
         label="Contact"
         className="flex h-full flex-col items-center justify-center gap-6 px-6 text-center"
       >
-        <p className="label text-muted-foreground">End of selection</p>
+        <p className="label text-muted-foreground">Capturing light in the moment</p>
 
 
 

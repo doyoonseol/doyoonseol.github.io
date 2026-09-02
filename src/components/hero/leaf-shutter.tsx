@@ -47,7 +47,7 @@ export function LeafShutter({
         <defs>
           <linearGradient id="blade-gradient" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" className="text-foreground" stopColor="currentColor" />
-            <stop offset="100%" className="text-foreground/70" stopColor="currentColor" />
+            <stop offset="100%" className="text-foreground" stopColor="currentColor" />
           </linearGradient>
           <filter id="blade-shadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow dx="-20" dy="10" stdDeviation="30" floodColor="black" floodOpacity="0.6" />

@@ -163,7 +163,7 @@ src/
   components/
     deck/              deck-provider.tsx (owns navigation), deck-section.tsx,
                        lens-reveal.tsx
-    hero/              hero.tsx, camera-model.tsx
+    hero/              hero.tsx, camera-model.tsx, leaf-shutter.tsx, bio-reveal.tsx
     gallery/           slide-deck.tsx, photo-slide.tsx, photo-figure.tsx,
                        photo-carousel.tsx, photo-meta.tsx, slide-rail.tsx
     ui/                shadcn components (none added yet)

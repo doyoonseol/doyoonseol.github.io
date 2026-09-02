@@ -31,7 +31,7 @@ export const SITE = {
    * above the camera. Two or three sentences reads best here; the measure is
    * deliberately narrow so it stays a paragraph rather than becoming a wall.
    */
-  bio: "I photograph quiet things — light on architecture, the gap between weather and mood, people caught mid-thought. Mostly on film, occasionally on a sensor. This is a selection rather than an archive.",
+  bio: "I am a student at the University of Pennsylvania studying neuroscience. But outside of class, I spend my time exploring the world and the colors it offers. I like to try different styles of photography - landscape, cityscape, and astrophotography. Still very much a novice, but always working to improve.",
 
 
 
